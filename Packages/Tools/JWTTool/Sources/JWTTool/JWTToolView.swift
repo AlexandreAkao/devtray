@@ -66,12 +66,15 @@ public struct JWTToolView: View {
     }
 
     private func jsonBlock(_ text: String) -> some View {
-        Text(text)
-            .font(.system(.callout, design: .monospaced))
-            .textSelection(.enabled)
-            .padding(8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(nsColor: .textBackgroundColor),
-                        in: RoundedRectangle(cornerRadius: 6))
+        ScrollView(.vertical) {
+            Text(text)
+                .font(.system(.callout, design: .monospaced))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(8)
+        }
+        .frame(maxHeight: 140)
+        .background(Color(nsColor: .textBackgroundColor),
+                    in: RoundedRectangle(cornerRadius: 6))
     }
 }

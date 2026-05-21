@@ -20,7 +20,7 @@ public struct PopoverRoot: View {
             Divider()
             footer
         }
-        .frame(width: 420, height: 540)
+        .frame(width: 560, height: 540)
         .onAppear {
             if selectedToolID == nil {
                 selectedToolID = filteredTools.first?.id
