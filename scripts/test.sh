@@ -12,13 +12,17 @@ PACKAGES=(
 
 failed=()
 for pkg in "${PACKAGES[@]}"; do
-    if [[ -d "$pkg" ]]; then
-        echo "=== Testing $pkg ==="
-        if ! (cd "$pkg" && swift test); then
-            failed+=("$pkg")
-        fi
-    else
+    if [[ ! -d "$pkg" ]]; then
         echo "=== Skipping $pkg (not yet created) ==="
+        continue
+    fi
+    if ! grep -q "testTarget" "$pkg/Package.swift" 2>/dev/null; then
+        echo "=== Skipping $pkg (no test target) ==="
+        continue
+    fi
+    echo "=== Testing $pkg ==="
+    if ! (cd "$pkg" && swift test); then
+        failed+=("$pkg")
     fi
 done
 
