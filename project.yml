@@ -55,3 +55,4 @@ targets:
     settings:
       base:
         TEST_TARGET_NAME: DevTrayApp
+        GENERATE_INFOPLIST_FILE: YES

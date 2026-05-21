@@ -1,0 +1,495 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A8E7171993E6403A9335DCF /* DevTrayUI in Frameworks */ = {isa = PBXBuildFile; productRef = DB49CEF28D16DE20F9185AF0 /* DevTrayUI */; };
+		0A9C17C6709AD9607F9267CA /* JSONTool in Frameworks */ = {isa = PBXBuildFile; productRef = 9A3C0D95AA27F6F713B661B4 /* JSONTool */; };
+		10C2C099702847898871B6A7 /* SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BEF58A2BC07D4577AB17E0 /* SmokeTests.swift */; };
+		26C20A388C7970568577313E /* Base64Tool in Frameworks */ = {isa = PBXBuildFile; productRef = DFB961B8113A42F508140268 /* Base64Tool */; };
+		6700C7F05C3FEC470F876084 /* JWTTool in Frameworks */ = {isa = PBXBuildFile; productRef = 52200E43CA23F8FAEE08D94B /* JWTTool */; };
+		B238F85D19CA5F850A4CE053 /* DevTrayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37F5359256FCD209C11F93A /* DevTrayApp.swift */; };
+		C5BF3EA7C021F70C65EA15CB /* DevTrayCore in Frameworks */ = {isa = PBXBuildFile; productRef = 60517E2256A31D10FA4E95AF /* DevTrayCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		543A171AE30CF3071C52998F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A5398B91F5094695BDB68F4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ECFDAE6E17FEBDDEDCDD2094;
+			remoteInfo = DevTrayApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		14CC1B4537F3DEFE901CC050 /* DevTrayApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevTrayApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1CCFAF7BE03B97F2E98E6995 /* Base64Tool */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Base64Tool; path = Packages/Tools/Base64Tool; sourceTree = SOURCE_ROOT; };
+		2C318464B35492EE3DE414A2 /* DevTrayAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTrayAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		46F9D87E437FAFFCC8EB64DD /* DevTrayApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DevTrayApp.entitlements; sourceTree = "<group>"; };
+		6F5302BA5B5F78397779E68F /* JSONTool */ = {isa = PBXFileReference; lastKnownFileType = folder; name = JSONTool; path = Packages/Tools/JSONTool; sourceTree = SOURCE_ROOT; };
+		76BEF58A2BC07D4577AB17E0 /* SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeTests.swift; sourceTree = "<group>"; };
+		B6FB59294905C06F96FB18EA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C37F5359256FCD209C11F93A /* DevTrayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevTrayApp.swift; sourceTree = "<group>"; };
+		D0687A5009E21B9311A672FC /* JWTTool */ = {isa = PBXFileReference; lastKnownFileType = folder; name = JWTTool; path = Packages/Tools/JWTTool; sourceTree = SOURCE_ROOT; };
+		D5516B0E92527B8733A5720C /* DevTrayCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DevTrayCore; path = Packages/DevTrayCore; sourceTree = SOURCE_ROOT; };
+		EFACB5E3A3A688269B98010C /* DevTrayUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DevTrayUI; path = Packages/DevTrayUI; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E628113D908E1DA38CEADD85 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5BF3EA7C021F70C65EA15CB /* DevTrayCore in Frameworks */,
+				0A8E7171993E6403A9335DCF /* DevTrayUI in Frameworks */,
+				6700C7F05C3FEC470F876084 /* JWTTool in Frameworks */,
+				0A9C17C6709AD9607F9267CA /* JSONTool in Frameworks */,
+				26C20A388C7970568577313E /* Base64Tool in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		01D268E09F4BC3DB654448F8 /* DevTrayAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				76BEF58A2BC07D4577AB17E0 /* SmokeTests.swift */,
+			);
+			name = DevTrayAppUITests;
+			path = Tests/DevTrayAppUITests;
+			sourceTree = "<group>";
+		};
+		7AC7E9DB31A9699E2FF01533 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				14CC1B4537F3DEFE901CC050 /* DevTrayApp.app */,
+				2C318464B35492EE3DE414A2 /* DevTrayAppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9A0C27D02250AAF7286C3F16 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				1CCFAF7BE03B97F2E98E6995 /* Base64Tool */,
+				D5516B0E92527B8733A5720C /* DevTrayCore */,
+				EFACB5E3A3A688269B98010C /* DevTrayUI */,
+				6F5302BA5B5F78397779E68F /* JSONTool */,
+				D0687A5009E21B9311A672FC /* JWTTool */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		C7D8E67D3AEF4AC8612246D1 /* DevTrayApp */ = {
+			isa = PBXGroup;
+			children = (
+				46F9D87E437FAFFCC8EB64DD /* DevTrayApp.entitlements */,
+				C37F5359256FCD209C11F93A /* DevTrayApp.swift */,
+				B6FB59294905C06F96FB18EA /* Info.plist */,
+			);
+			name = DevTrayApp;
+			path = App/DevTrayApp;
+			sourceTree = "<group>";
+		};
+		EEB2BA63317CA464D4A36D0F = {
+			isa = PBXGroup;
+			children = (
+				C7D8E67D3AEF4AC8612246D1 /* DevTrayApp */,
+				01D268E09F4BC3DB654448F8 /* DevTrayAppUITests */,
+				9A0C27D02250AAF7286C3F16 /* Packages */,
+				7AC7E9DB31A9699E2FF01533 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CC83850C4BED8839B1378919 /* DevTrayAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D92EF25BC1152FF8291062DC /* Build configuration list for PBXNativeTarget "DevTrayAppUITests" */;
+			buildPhases = (
+				AA63AF3A0C6234805909B103 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D374885D8427289C12EC870B /* PBXTargetDependency */,
+			);
+			name = DevTrayAppUITests;
+			packageProductDependencies = (
+			);
+			productName = DevTrayAppUITests;
+			productReference = 2C318464B35492EE3DE414A2 /* DevTrayAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		ECFDAE6E17FEBDDEDCDD2094 /* DevTrayApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF025B9B9263970517F2DFA5 /* Build configuration list for PBXNativeTarget "DevTrayApp" */;
+			buildPhases = (
+				15260303D95501CBB5EC804F /* Sources */,
+				E628113D908E1DA38CEADD85 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DevTrayApp;
+			packageProductDependencies = (
+				60517E2256A31D10FA4E95AF /* DevTrayCore */,
+				DB49CEF28D16DE20F9185AF0 /* DevTrayUI */,
+				52200E43CA23F8FAEE08D94B /* JWTTool */,
+				9A3C0D95AA27F6F713B661B4 /* JSONTool */,
+				DFB961B8113A42F508140268 /* Base64Tool */,
+			);
+			productName = DevTrayApp;
+			productReference = 14CC1B4537F3DEFE901CC050 /* DevTrayApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3A5398B91F5094695BDB68F4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					CC83850C4BED8839B1378919 = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = ECFDAE6E17FEBDDEDCDD2094;
+					};
+					ECFDAE6E17FEBDDEDCDD2094 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 26A758ECC3C9B8DE5E4DE7A9 /* Build configuration list for PBXProject "DevTray" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = EEB2BA63317CA464D4A36D0F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BA69CE707C1865DEB8F447CC /* XCLocalSwiftPackageReference "Packages/Tools/Base64Tool" */,
+				D61EB2AB55F7FA12DBBF8002 /* XCLocalSwiftPackageReference "Packages/DevTrayCore" */,
+				0B5DEBFADC01A3C59494B95A /* XCLocalSwiftPackageReference "Packages/DevTrayUI" */,
+				4DDCB4096D047D1A1B4E7D3F /* XCLocalSwiftPackageReference "Packages/Tools/JSONTool" */,
+				D40D7D840D932D7E48970620 /* XCLocalSwiftPackageReference "Packages/Tools/JWTTool" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7AC7E9DB31A9699E2FF01533 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ECFDAE6E17FEBDDEDCDD2094 /* DevTrayApp */,
+				CC83850C4BED8839B1378919 /* DevTrayAppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15260303D95501CBB5EC804F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B238F85D19CA5F850A4CE053 /* DevTrayApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA63AF3A0C6234805909B103 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				10C2C099702847898871B6A7 /* SmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D374885D8427289C12EC870B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ECFDAE6E17FEBDDEDCDD2094 /* DevTrayApp */;
+			targetProxy = 543A171AE30CF3071C52998F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		027A55421FB58319CEA21078 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/DevTrayApp/DevTrayApp.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = App/DevTrayApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.devtray.app;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		3BCD8967241362DA314BEC8C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.devtray.DevTrayAppUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = DevTrayApp;
+			};
+			name = Release;
+		};
+		3F8BDAB6D20D8697671B7294 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.devtray.DevTrayAppUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = DevTrayApp;
+			};
+			name = Debug;
+		};
+		83600A4330C314B8B7264509 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		C4D4F36C1327E61BE743D8E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/DevTrayApp/DevTrayApp.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = App/DevTrayApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.devtray.app;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		EBF54898F1B6B1B663752899 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		26A758ECC3C9B8DE5E4DE7A9 /* Build configuration list for PBXProject "DevTray" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EBF54898F1B6B1B663752899 /* Debug */,
+				83600A4330C314B8B7264509 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AF025B9B9263970517F2DFA5 /* Build configuration list for PBXNativeTarget "DevTrayApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C4D4F36C1327E61BE743D8E5 /* Debug */,
+				027A55421FB58319CEA21078 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D92EF25BC1152FF8291062DC /* Build configuration list for PBXNativeTarget "DevTrayAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F8BDAB6D20D8697671B7294 /* Debug */,
+				3BCD8967241362DA314BEC8C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0B5DEBFADC01A3C59494B95A /* XCLocalSwiftPackageReference "Packages/DevTrayUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DevTrayUI;
+		};
+		4DDCB4096D047D1A1B4E7D3F /* XCLocalSwiftPackageReference "Packages/Tools/JSONTool" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Tools/JSONTool;
+		};
+		BA69CE707C1865DEB8F447CC /* XCLocalSwiftPackageReference "Packages/Tools/Base64Tool" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Tools/Base64Tool;
+		};
+		D40D7D840D932D7E48970620 /* XCLocalSwiftPackageReference "Packages/Tools/JWTTool" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Tools/JWTTool;
+		};
+		D61EB2AB55F7FA12DBBF8002 /* XCLocalSwiftPackageReference "Packages/DevTrayCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DevTrayCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		52200E43CA23F8FAEE08D94B /* JWTTool */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JWTTool;
+		};
+		60517E2256A31D10FA4E95AF /* DevTrayCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DevTrayCore;
+		};
+		9A3C0D95AA27F6F713B661B4 /* JSONTool */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JSONTool;
+		};
+		DB49CEF28D16DE20F9185AF0 /* DevTrayUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DevTrayUI;
+		};
+		DFB961B8113A42F508140268 /* Base64Tool */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Base64Tool;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3A5398B91F5094695BDB68F4 /* Project object */;
+}
