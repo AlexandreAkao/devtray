@@ -1,0 +1,14 @@
+import SwiftUI
+import DevTrayCore
+
+public enum JSONTool: Tool {
+    public static let id: ToolID = "json"
+    public static let displayName = "JSON"
+    public static let iconName = "curlybraces"
+    public static let keywords = ["json", "format", "pretty", "minify"]
+    public static let category: ToolCategory = .formatting
+
+    @MainActor public static func makeView() -> AnyView {
+        AnyView(JSONToolView())
+    }
+}
