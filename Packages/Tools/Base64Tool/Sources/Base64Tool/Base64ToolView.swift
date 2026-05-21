@@ -37,13 +37,7 @@ public struct Base64ToolView: View {
             }
 
             if !output.isEmpty {
-                Text(output)
-                    .font(.system(.callout, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(nsColor: .textBackgroundColor),
-                                in: RoundedRectangle(cornerRadius: 6))
+                MonospaceOutput(output)
             }
         }
     }

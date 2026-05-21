@@ -56,25 +56,12 @@ public struct JWTToolView: View {
             Label("Header", systemImage: "h.square")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            jsonBlock(decoded.headerJSON)
+            MonospaceOutput(decoded.headerJSON, maxHeight: 140)
 
             Label("Payload", systemImage: "p.square")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            jsonBlock(decoded.payloadJSON)
+            MonospaceOutput(decoded.payloadJSON, maxHeight: 140)
         }
-    }
-
-    private func jsonBlock(_ text: String) -> some View {
-        ScrollView(.vertical) {
-            Text(text)
-                .font(.system(.callout, design: .monospaced))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-        }
-        .frame(maxHeight: 140)
-        .background(Color(nsColor: .textBackgroundColor),
-                    in: RoundedRectangle(cornerRadius: 6))
     }
 }
