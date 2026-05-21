@@ -1,0 +1,47 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  packages:
+    name: swift test (${{ matrix.package }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - Packages/DevTrayCore
+          - Packages/Tools/JWTTool
+          - Packages/Tools/JSONTool
+          - Packages/Tools/Base64Tool
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Test ${{ matrix.package }}
+        working-directory: ${{ matrix.package }}
+        run: swift test --parallel
+
+  app:
+    name: xcodebuild test (app + smoke)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project DevTray.xcodeproj \
+            -scheme DevTrayApp \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/ \
+            | xcpretty
+        env:
+          NSUnbufferedIO: YES
