@@ -49,7 +49,7 @@ public struct Base64ToolView: View {
     }
 
     private func recompute() {
-        guard !input.isEmpty else {
+        guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             output = ""
             error = nil
             return
