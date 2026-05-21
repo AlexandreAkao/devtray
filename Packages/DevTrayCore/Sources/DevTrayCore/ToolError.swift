@@ -1,3 +1,5 @@
+import Foundation
+
 public enum ToolError: LocalizedError, Equatable {
     case parseFailure(reason: String, hint: String?)
     case invalidInput(reason: String)
