@@ -1,0 +1,57 @@
+name: DevTray
+options:
+  bundleIdPrefix: com.devtray
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_STYLE: Automatic
+packages:
+  DevTrayCore:
+    path: Packages/DevTrayCore
+  DevTrayUI:
+    path: Packages/DevTrayUI
+  JWTTool:
+    path: Packages/Tools/JWTTool
+  JSONTool:
+    path: Packages/Tools/JSONTool
+  Base64Tool:
+    path: Packages/Tools/Base64Tool
+targets:
+  DevTrayApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/DevTrayApp
+    info:
+      path: App/DevTrayApp/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleDisplayName: DevTray
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+    entitlements:
+      path: App/DevTrayApp/DevTrayApp.entitlements
+    dependencies:
+      - package: DevTrayCore
+      - package: DevTrayUI
+      - package: JWTTool
+      - package: JSONTool
+      - package: Base64Tool
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app
+        ENABLE_HARDENED_RUNTIME: YES
+  DevTrayAppUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: Tests/DevTrayAppUITests
+    dependencies:
+      - target: DevTrayApp
+    settings:
+      base:
+        TEST_TARGET_NAME: DevTrayApp
