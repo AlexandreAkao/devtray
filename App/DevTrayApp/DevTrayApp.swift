@@ -4,6 +4,10 @@ import DevTrayUI
 import JWTTool
 import JSONTool
 import Base64Tool
+import URLTool
+import HashTool
+import UUIDTool
+import TimestampTool
 
 @main
 struct DevTrayApp: App {
@@ -28,6 +32,10 @@ private func makeRegistry() -> ToolRegistry {
     r.register(JWTTool.self)
     r.register(JSONTool.self)
     r.register(Base64Tool.self)
+    r.register(URLTool.self)
+    r.register(HashTool.self)
+    r.register(UUIDTool.self)
+    r.register(TimestampTool.self)
     return r
 }
 
@@ -49,7 +57,7 @@ private struct AboutTab: View {
                 .foregroundStyle(.tint)
             Text("DevTray")
                 .font(.title2).fontWeight(.semibold)
-            Text("Version 0.1.0")
+            Text("Version 0.2.0")
                 .font(.callout)
                 .foregroundStyle(.secondary)
             Spacer()

@@ -11,6 +11,10 @@ let package = Package(
         .package(path: "Packages/Tools/JWTTool"),
         .package(path: "Packages/Tools/JSONTool"),
         .package(path: "Packages/Tools/Base64Tool"),
+        .package(path: "Packages/Tools/URLTool"),
+        .package(path: "Packages/Tools/HashTool"),
+        .package(path: "Packages/Tools/UUIDTool"),
+        .package(path: "Packages/Tools/TimestampTool"),
     ],
     targets: []
 )
