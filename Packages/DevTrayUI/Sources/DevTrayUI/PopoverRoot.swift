@@ -80,7 +80,7 @@ public struct PopoverRoot: View {
 
     private var footer: some View {
         HStack {
-            Text("DevTray v0.1.0")
+            Text("DevTray v0.2.0")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
             Spacer()

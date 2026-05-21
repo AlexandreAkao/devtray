@@ -20,6 +20,14 @@ packages:
     path: Packages/Tools/JSONTool
   Base64Tool:
     path: Packages/Tools/Base64Tool
+  URLTool:
+    path: Packages/Tools/URLTool
+  HashTool:
+    path: Packages/Tools/HashTool
+  UUIDTool:
+    path: Packages/Tools/UUIDTool
+  TimestampTool:
+    path: Packages/Tools/TimestampTool
 targets:
   DevTrayApp:
     type: application
@@ -31,8 +39,8 @@ targets:
       properties:
         LSUIElement: true
         CFBundleDisplayName: DevTray
-        CFBundleShortVersionString: "0.1.0"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.2.0"
+        CFBundleVersion: "2"
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
     dependencies:
@@ -41,6 +49,10 @@ targets:
       - package: JWTTool
       - package: JSONTool
       - package: Base64Tool
+      - package: URLTool
+      - package: HashTool
+      - package: UUIDTool
+      - package: TimestampTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app

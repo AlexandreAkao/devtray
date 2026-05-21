@@ -8,6 +8,10 @@ PACKAGES=(
     "Packages/Tools/JWTTool"
     "Packages/Tools/JSONTool"
     "Packages/Tools/Base64Tool"
+    "Packages/Tools/URLTool"
+    "Packages/Tools/HashTool"
+    "Packages/Tools/UUIDTool"
+    "Packages/Tools/TimestampTool"
 )
 
 failed=()
