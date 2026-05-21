@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Runs swift test for every Swift Package in the workspace.
 set -euo pipefail
 
 PACKAGES=(
