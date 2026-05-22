@@ -11,6 +11,15 @@ public final class SQLiteUsageStore: UsageStore, @unchecked Sendable {
         self.dbQueue = dbQueue
     }
 
+    public static func openDefault() throws -> SQLiteUsageStore {
+        let url = try DatabaseOpener.defaultURL()
+        let queue = try DatabaseOpener.open(at: url)
+        var migrator = DatabaseMigrator()
+        Migrations.register(on: &migrator)
+        try migrator.migrate(queue)
+        return SQLiteUsageStore(dbQueue: queue)
+    }
+
     public func record(toolID: ToolID, at date: Date) async {
         do {
             try await dbQueue.write { db in
