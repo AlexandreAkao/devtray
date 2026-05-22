@@ -1,6 +1,8 @@
 import SwiftUI
+import os
 import DevTrayCore
 import DevTrayUI
+import DevTrayStorage
 import JWTTool
 import JSONTool
 import Base64Tool
@@ -12,11 +14,13 @@ import TimestampTool
 @main
 struct DevTrayApp: App {
     @StateObject private var registry = makeRegistry()
+    private let usageStore: any UsageStore = makeUsageStore()
 
     var body: some Scene {
         MenuBarExtra("DevTray", systemImage: "wrench.adjustable") {
             PopoverRoot()
                 .environmentObject(registry)
+                .environment(\.usageStore, usageStore)
         }
         .menuBarExtraStyle(.window)
 
@@ -37,6 +41,16 @@ private func makeRegistry() -> ToolRegistry {
     r.register(UUIDTool.self)
     r.register(TimestampTool.self)
     return r
+}
+
+private func makeUsageStore() -> any UsageStore {
+    do {
+        return try SQLiteUsageStore.openDefault()
+    } catch {
+        Logger(subsystem: "com.devtray.app", category: "storage")
+            .error("SQLite open failed, using in-memory store: \(error.localizedDescription, privacy: .public)")
+        return InMemoryUsageStore()
+    }
 }
 
 private struct SettingsView: View {
