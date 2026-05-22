@@ -43,6 +43,8 @@ targets:
         CFBundleVersion: "2"
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
+      properties:
+        com.apple.security.network.client: true
     dependencies:
       - package: DevTrayCore
       - package: DevTrayUI
