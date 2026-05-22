@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 # Runs swift test for every Swift Package in the workspace.
+#
+# NOTE: xcodebuild caches local SPM package state. If a Packages/* edit
+# does not reflect in the next test run, prepend `clean` to the xcodebuild
+# command (`xcodebuild clean build ...`). We do NOT clean by default because
+# it is slow. See devtray-state memory for context.
 set -euo pipefail
 
 PACKAGES=(
