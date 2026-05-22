@@ -41,8 +41,8 @@ targets:
       properties:
         LSUIElement: true
         CFBundleDisplayName: DevTray
-        CFBundleShortVersionString: "0.2.0"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "0.3.0"
+        CFBundleVersion: "3"
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
       properties:

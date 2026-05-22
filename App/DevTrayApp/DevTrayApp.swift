@@ -71,7 +71,7 @@ private struct AboutTab: View {
                 .foregroundStyle(.tint)
             Text("DevTray")
                 .font(.title2).fontWeight(.semibold)
-            Text("Version 0.2.0")
+            Text("Version \(AppMetadata.version)")
                 .font(.callout)
                 .foregroundStyle(.secondary)
             Spacer()
