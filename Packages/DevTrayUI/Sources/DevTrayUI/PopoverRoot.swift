@@ -3,8 +3,12 @@ import DevTrayCore
 
 public struct PopoverRoot: View {
     @EnvironmentObject private var registry: ToolRegistry
+    @Environment(\.usageStore) private var usageStore
+
     @State private var searchText: String = ""
     @State private var selectedToolID: ToolID?
+    @State private var topTools: [ToolUsageRank] = []
+    @State private var hasBootstrapped: Bool = false
 
     public init() {}
 
@@ -21,10 +25,16 @@ public struct PopoverRoot: View {
             footer
         }
         .frame(width: 560, height: 540)
+        .task { await refreshTopTools() }
+        .onChange(of: selectedToolID) { _, newValue in
+            guard hasBootstrapped, let id = newValue else { return }
+            Task { await usageStore.record(toolID: id, at: .now) }
+        }
         .onAppear {
             if selectedToolID == nil {
                 selectedToolID = filteredTools.first?.id
             }
+            hasBootstrapped = true
         }
     }
 
@@ -79,18 +89,33 @@ public struct PopoverRoot: View {
     }
 
     private var footer: some View {
-        HStack {
-            Text("DevTray v0.2.0")
+        HStack(spacing: 6) {
+            ForEach(topTools, id: \.toolID) { rank in
+                if let tool = registry.find(byID: rank.toolID) {
+                    FrequentToolChip(tool: tool) {
+                        selectedToolID = tool.id
+                    }
+                }
+            }
+            Spacer()
+            Text("DevTray v\(AppMetadata.version)")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-            Spacer()
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+        .frame(height: 32)
     }
 
     private var filteredTools: [AnyTool] {
         registry.search(searchText)
+    }
+
+    private func refreshTopTools() async {
+        let result = try? await usageStore.topTools(
+            window: .lastDays(30), limit: 3, now: .now
+        )
+        topTools = result ?? []
     }
 }
 
