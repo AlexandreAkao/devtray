@@ -10,6 +10,7 @@ set -euo pipefail
 PACKAGES=(
     "Packages/DevTrayCore"
     "Packages/DevTrayUI"
+    "Packages/DevTrayStorage"
     "Packages/Tools/JWTTool"
     "Packages/Tools/JSONTool"
     "Packages/Tools/Base64Tool"
