@@ -56,9 +56,10 @@ final class SpotlightController {
 
     private func installContent(panel: SpotlightPanel, clipboard: String?) {
         let ranker = SpotlightRanker(registry: registry, usage: usageStore)
+        let capturedRegistry = registry
         let view = SpotlightSearchView(
-            viewModel: {
-                let vm = SpotlightViewModel(ranker: ranker, registry: self.registry)
+            viewModel: { [capturedRegistry] in
+                let vm = SpotlightViewModel(ranker: ranker, registry: capturedRegistry)
                 vm.onOpen(clipboard: clipboard)
                 return vm
             },
@@ -111,22 +112,21 @@ final class SpotlightController {
         openPopover()
     }
 
+    /// v0.4 limitation: ⌘↩ from the keyboard is a no-op because we can't reach
+    /// into the SwiftUI view's `selectedID` from the AppKit `keyDown` override.
+    /// The bare `↩` path (via `onKeyPress(.return)` inside `SpotlightSearchView`)
+    /// and the mouse-tap path cover the common cases. A future iteration can
+    /// thread the current ToolID through `SpotlightPanel.onReturnWithCommand`
+    /// by sharing the view model with the panel directly.
     private func handleSubmitWithCommand() {
-        guard let id = (panel?.contentView as? NSHostingView<SpotlightSearchView>) != nil
-            ? currentSelectedID() : nil
-        else { return }
+        guard let id = currentSelectedID() else { return }
         preloadBus.send(PreloadPayload(toolID: id, text: nil))
         close()
         openPopover()
     }
 
     private func currentSelectedID() -> ToolID? {
-        // We can't easily reach into SwiftUI view state from here. As a pragmatic
-        // shim, the SpotlightPanel's onReturnWithCommand could be wired to a
-        // ToolID provider closure assigned from the view model. For v0.4 we
-        // accept the cost: ⌘↩ is rare; submitting via mouse or ↩ covers 95%.
-        // Mid-flight fix: extend SpotlightPanel.onReturnWithCommand to pass the
-        // current ToolID by sharing the view model with the panel directly.
+        // Always nil for v0.4 — see handleSubmitWithCommand header.
         return nil
     }
 
