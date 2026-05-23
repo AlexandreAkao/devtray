@@ -75,10 +75,27 @@ private func makeUsageStore() -> any UsageStore {
 private struct SettingsView: View {
     var body: some View {
         TabView {
+            ShortcutsTab()
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 420, height: 240)
+        .frame(width: 480, height: 280)
+    }
+}
+
+private struct ShortcutsTab: View {
+    var body: some View {
+        Form {
+            LabeledContent("Open Spotlight") {
+                KeyboardShortcuts.Recorder(for: .toggleSpotlight)
+            }
+            Text("Press the shortcut from any app to open DevTray's quick search.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
+        .padding()
     }
 }
 
