@@ -4,6 +4,7 @@ import DevTrayUI
 import HashToolKit
 
 public struct HashToolView: View {
+    @Environment(\.preloadBus) private var preloadBus
     @State private var input: String = ""
     @State private var md5: String = ""
     @State private var sha1: String = ""
@@ -29,6 +30,21 @@ public struct HashToolView: View {
                 labeledRow("SHA-512", value: sha512)
             }
         }
+        .onReceive(preloadBus.$pending) { _ in
+            applyPendingPreloadIfMatches()
+        }
+        .task {
+            applyPendingPreloadIfMatches()
+        }
+    }
+
+    private func applyPendingPreloadIfMatches() {
+        guard let payload = preloadBus.pending,
+              payload.toolID == HashTool.id,
+              let text = payload.text
+        else { return }
+        input = text
+        _ = preloadBus.consume()
     }
 
     @ViewBuilder

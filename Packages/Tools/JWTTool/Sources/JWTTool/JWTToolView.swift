@@ -4,6 +4,7 @@ import DevTrayUI
 import JWTToolKit
 
 public struct JWTToolView: View {
+    @Environment(\.preloadBus) private var preloadBus
     @State private var input: String = ""
     @State private var decoded: DecodedJWT?
     @State private var error: ToolError?
@@ -33,6 +34,21 @@ public struct JWTToolView: View {
                 decodedView(decoded)
             }
         }
+        .onReceive(preloadBus.$pending) { _ in
+            applyPendingPreloadIfMatches()
+        }
+        .task {
+            applyPendingPreloadIfMatches()
+        }
+    }
+
+    private func applyPendingPreloadIfMatches() {
+        guard let payload = preloadBus.pending,
+              payload.toolID == JWTTool.id,
+              let text = payload.text
+        else { return }
+        input = text
+        _ = preloadBus.consume()
     }
 
     private func recompute(_ raw: String) {

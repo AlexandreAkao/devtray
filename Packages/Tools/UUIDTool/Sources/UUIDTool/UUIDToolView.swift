@@ -5,6 +5,7 @@ import DevTrayUI
 import UUIDToolKit
 
 public struct UUIDToolView: View {
+    @Environment(\.preloadBus) private var preloadBus
     @State private var format: IDFormat = .uuidV4
     @State private var count: Int = 1
     @State private var results: [String] = []
@@ -60,6 +61,20 @@ public struct UUIDToolView: View {
         .onAppear {
             if results.isEmpty { generate() }
         }
+        .onReceive(preloadBus.$pending) { _ in
+            applyPendingPreloadIfMatches()
+        }
+        .task {
+            applyPendingPreloadIfMatches()
+        }
+    }
+
+    private func applyPendingPreloadIfMatches() {
+        guard let payload = preloadBus.pending,
+              payload.toolID == UUIDTool.id
+        else { return }
+        // No input field; just consume so the popover doesn't keep the pending state.
+        _ = preloadBus.consume()
     }
 
     private func generate() {

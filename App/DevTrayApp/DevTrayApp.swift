@@ -40,6 +40,7 @@ struct DevTrayApp: App {
             PopoverRoot()
                 .environmentObject(registry)
                 .environment(\.usageStore, usageStore)
+                .environment(\.preloadBus, preloadBus)
         }
         .menuBarExtraStyle(.window)
 

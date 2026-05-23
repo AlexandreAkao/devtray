@@ -4,6 +4,7 @@ import DevTrayUI
 import TimestampToolKit
 
 public struct TimestampToolView: View {
+    @Environment(\.preloadBus) private var preloadBus
     @State private var input: String = ""
     @State private var breakdown: TimestampBreakdown?
     @State private var error: ToolError?
@@ -34,6 +35,21 @@ public struct TimestampToolView: View {
                 labeledRow("ISO 8601 (Local)", value: b.isoLocal)
             }
         }
+        .onReceive(preloadBus.$pending) { _ in
+            applyPendingPreloadIfMatches()
+        }
+        .task {
+            applyPendingPreloadIfMatches()
+        }
+    }
+
+    private func applyPendingPreloadIfMatches() {
+        guard let payload = preloadBus.pending,
+              payload.toolID == TimestampTool.id,
+              let text = payload.text
+        else { return }
+        input = text
+        _ = preloadBus.consume()
     }
 
     @ViewBuilder

@@ -4,6 +4,7 @@ import DevTrayCore
 public struct PopoverRoot: View {
     @EnvironmentObject private var registry: ToolRegistry
     @Environment(\.usageStore) private var usageStore
+    @Environment(\.preloadBus) private var preloadBus
 
     @State private var searchText: String = ""
     @State private var selectedToolID: ToolID?
@@ -35,6 +36,11 @@ public struct PopoverRoot: View {
                 selectedToolID = filteredTools.first?.id
             }
             hasBootstrapped = true
+        }
+        .onReceive(preloadBus.$pending) { payload in
+            guard let payload else { return }
+            selectedToolID = payload.toolID
+            // Text consumption happens inside the tool view, not here.
         }
     }
 

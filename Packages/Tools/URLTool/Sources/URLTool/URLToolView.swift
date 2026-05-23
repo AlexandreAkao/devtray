@@ -10,6 +10,7 @@ public struct URLToolView: View {
         var id: String { rawValue }
     }
 
+    @Environment(\.preloadBus) private var preloadBus
     @State private var input: String = ""
     @State private var output: String = ""
     @State private var error: ToolError?
@@ -40,6 +41,21 @@ public struct URLToolView: View {
                 MonospaceOutput(output)
             }
         }
+        .onReceive(preloadBus.$pending) { _ in
+            applyPendingPreloadIfMatches()
+        }
+        .task {
+            applyPendingPreloadIfMatches()
+        }
+    }
+
+    private func applyPendingPreloadIfMatches() {
+        guard let payload = preloadBus.pending,
+              payload.toolID == URLTool.id,
+              let text = payload.text
+        else { return }
+        input = text
+        _ = preloadBus.consume()
     }
 
     private func recompute() {
