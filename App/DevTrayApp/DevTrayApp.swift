@@ -13,8 +13,21 @@ import TimestampTool
 
 @main
 struct DevTrayApp: App {
-    @StateObject private var registry = makeRegistry()
+    @StateObject private var registry: ToolRegistry
     private let usageStore: any UsageStore = makeUsageStore()
+    private let preloadBus = PreloadBus()
+    @State private var spotlightController: SpotlightController?
+
+    init() {
+        let registryValue = makeRegistry()
+        _registry = StateObject(wrappedValue: registryValue)
+        let controller = SpotlightController(
+            registry: registryValue,
+            usageStore: usageStore,
+            preloadBus: preloadBus
+        )
+        _spotlightController = State(initialValue: controller)
+    }
 
     var body: some Scene {
         MenuBarExtra("DevTray", systemImage: "wrench.adjustable") {
