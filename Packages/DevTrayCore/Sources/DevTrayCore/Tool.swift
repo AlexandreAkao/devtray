@@ -8,6 +8,10 @@ public protocol Tool: Sendable {
     static var category: ToolCategory { get }
 
     @MainActor static func makeView() -> AnyView
+
+    /// Tools can opt in to clipboard-driven promotion by overriding this. The default
+    /// returns `nil` (no match).
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore?
 }
 
 public extension Tool {
