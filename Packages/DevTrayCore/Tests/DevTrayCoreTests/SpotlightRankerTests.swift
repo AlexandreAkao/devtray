@@ -50,7 +50,10 @@ final class SpotlightRankerTests: XCTestCase {
         static let category: ToolCategory = .crypto
         @MainActor static func makeView() -> AnyView { AnyView(EmptyView()) }
         static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
-            clipboard.count == 32 ? ClipboardMatchScore(.weak) : nil
+            if clipboard.count == 32 || clipboard.hasPrefix("eyJ") {
+                return ClipboardMatchScore(.weak)
+            }
+            return nil
         }
     }
 
@@ -91,8 +94,12 @@ final class SpotlightRankerTests: XCTestCase {
     func test_emptyQuery_strongBeatsWeak() async {
         let usage = InMemoryUsageStore()
         let ranker = SpotlightRanker(registry: makeRegistry(), usage: usage)
+        // Clipboard "eyJhbGc.x.y" fires JWT (.strong) AND Hash (.weak, opted into
+        // matching the JWT prefix above to set up this head-to-head). Top must be
+        // JWT because confidence > usage rank in pickTopMatcher.
         let results = await ranker.rank(query: "", clipboard: "eyJhbGc.x.y", limit: 8)
         XCTAssertEqual(results.first?.toolID, "jwt")
+        XCTAssertTrue(results.first?.fromClipboard ?? false)
     }
 
     func test_emptyQuery_weakOnlyMatch_putsWeakOnTop() async {
@@ -113,9 +120,12 @@ final class SpotlightRankerTests: XCTestCase {
         XCTAssertEqual(results.first?.toolID, "json")
     }
 
-    func test_query_withClipboardThatMatchesNonTopRow_setsBadge() async {
+    func test_query_clipboardMatchOnFilteredOutTool_noBadge() async {
         let usage = InMemoryUsageStore()
         let ranker = SpotlightRanker(registry: makeRegistry(), usage: usage)
+        // "j" matches JWT and JSON via subsequence; clipboard is a URL that
+        // only the URL tool's matcher would recognize — but URL is not in the
+        // fuzzy-filtered rows, so no badge appears anywhere in the result.
         let results = await ranker.rank(query: "j", clipboard: "https://x.example", limit: 8)
         XCTAssertFalse(results.contains(where: { $0.fromClipboard }))
     }
