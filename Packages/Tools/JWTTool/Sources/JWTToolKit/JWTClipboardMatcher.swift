@@ -10,6 +10,7 @@ public enum JWTClipboardMatcher {
         let allowed = CharacterSet(charactersIn:
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
         for segment in segments {
+            if segment.isEmpty { return nil }
             if segment.unicodeScalars.contains(where: { !allowed.contains($0) }) {
                 return nil
             }

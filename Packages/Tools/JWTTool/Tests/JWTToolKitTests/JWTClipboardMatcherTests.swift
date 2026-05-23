@@ -30,4 +30,10 @@ final class JWTClipboardMatcherTests: XCTestCase {
     func test_emptyString_returnsNil() {
         XCTAssertNil(JWTClipboardMatcher.match(""))
     }
+
+    func test_jwtWithEmptySegments_returnsNil() {
+        XCTAssertNil(JWTClipboardMatcher.match("eyJ.."))
+        XCTAssertNil(JWTClipboardMatcher.match("eyJabc.."))
+        XCTAssertNil(JWTClipboardMatcher.match("eyJ.x."))
+    }
 }
