@@ -1,5 +1,6 @@
 import SwiftUI
 import os
+import KeyboardShortcuts
 import DevTrayCore
 import DevTrayUI
 import DevTrayStorage
@@ -27,6 +28,11 @@ struct DevTrayApp: App {
             preloadBus: preloadBus
         )
         _spotlightController = State(initialValue: controller)
+
+        let capturedController = controller
+        KeyboardShortcuts.onKeyDown(for: .toggleSpotlight) {
+            capturedController.toggle()
+        }
     }
 
     var body: some Scene {
