@@ -9,3 +9,9 @@ public protocol Tool: Sendable {
 
     @MainActor static func makeView() -> AnyView
 }
+
+public extension Tool {
+    /// Default: tool does not declare a clipboard match. Override in conforming types
+    /// to promote a tool when the clipboard contains a recognized format.
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? { nil }
+}
