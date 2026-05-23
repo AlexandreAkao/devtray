@@ -10,7 +10,7 @@ public struct URLToolView: View {
         var id: String { rawValue }
     }
 
-    @Environment(\.preloadBus) private var preloadBus
+    @Environment(\.preloadBus) private var preloadBus: PreloadBus
     @State private var input: String = ""
     @State private var output: String = ""
     @State private var error: ToolError?

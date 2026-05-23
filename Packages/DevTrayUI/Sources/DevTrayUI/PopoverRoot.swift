@@ -4,7 +4,7 @@ import DevTrayCore
 public struct PopoverRoot: View {
     @EnvironmentObject private var registry: ToolRegistry
     @Environment(\.usageStore) private var usageStore
-    @Environment(\.preloadBus) private var preloadBus
+    @Environment(\.preloadBus) private var preloadBus: PreloadBus
 
     @State private var searchText: String = ""
     @State private var selectedToolID: ToolID?

@@ -4,7 +4,7 @@ import DevTrayUI
 import TimestampToolKit
 
 public struct TimestampToolView: View {
-    @Environment(\.preloadBus) private var preloadBus
+    @Environment(\.preloadBus) private var preloadBus: PreloadBus
     @State private var input: String = ""
     @State private var breakdown: TimestampBreakdown?
     @State private var error: ToolError?

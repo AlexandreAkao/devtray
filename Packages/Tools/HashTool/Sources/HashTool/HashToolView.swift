@@ -4,7 +4,7 @@ import DevTrayUI
 import HashToolKit
 
 public struct HashToolView: View {
-    @Environment(\.preloadBus) private var preloadBus
+    @Environment(\.preloadBus) private var preloadBus: PreloadBus
     @State private var input: String = ""
     @State private var md5: String = ""
     @State private var sha1: String = ""

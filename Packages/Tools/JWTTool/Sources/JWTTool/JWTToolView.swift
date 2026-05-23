@@ -4,7 +4,7 @@ import DevTrayUI
 import JWTToolKit
 
 public struct JWTToolView: View {
-    @Environment(\.preloadBus) private var preloadBus
+    @Environment(\.preloadBus) private var preloadBus: PreloadBus
     @State private var input: String = ""
     @State private var decoded: DecodedJWT?
     @State private var error: ToolError?
