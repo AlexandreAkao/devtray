@@ -28,6 +28,12 @@ public final class SpotlightPanel: NSPanel {
     /// Allows intercepting `⌘↩` for "navigate without preload".
     public var onReturnWithCommand: (() -> Void)?
 
+    public var onCancel: (() -> Void)?
+
+    public override func cancelOperation(_ sender: Any?) {
+        onCancel?()
+    }
+
     public override func keyDown(with event: NSEvent) {
         let isReturn = event.keyCode == 36
         let isCommand = event.modifierFlags.contains(.command)

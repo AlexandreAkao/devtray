@@ -7,6 +7,13 @@ public struct SpotlightSearchView: View {
     private let onCancel: () -> Void
     @FocusState private var searchFocused: Bool
 
+    private enum Mode: Equatable {
+        case list
+        case tool(ToolID)
+    }
+
+    @State private var mode: Mode = .list
+
     public init(
         viewModel: @escaping () -> SpotlightViewModel,
         onSubmit: @escaping (SpotlightResult, _ withPreload: Bool) -> Void,
@@ -18,13 +25,67 @@ public struct SpotlightSearchView: View {
     }
 
     public var body: some View {
+        Group {
+            switch mode {
+            case .list:
+                listMode
+            case .tool(let id):
+                toolMode(id: id)
+            }
+        }
+        .background(.ultraThinMaterial)
+        .onAppear {
+            DispatchQueue.main.async {
+                searchFocused = true
+            }
+        }
+    }
+
+    private var listMode: some View {
         VStack(spacing: 0) {
             searchField
             Divider()
             list
         }
-        .background(.ultraThinMaterial)
-        .onAppear { searchFocused = true }
+    }
+
+    private func toolMode(id: ToolID) -> some View {
+        VStack(spacing: 0) {
+            toolHeader(id: id)
+            Divider()
+            if let tool = viewModel.tool(for: id) {
+                tool.makeView()
+                    .padding(12)
+            } else {
+                ContentUnavailableView(
+                    "Tool not found",
+                    systemImage: "exclamationmark.triangle"
+                )
+            }
+        }
+        .onKeyPress(.escape) {
+            mode = .list
+            return .handled
+        }
+    }
+
+    private func toolHeader(id: ToolID) -> some View {
+        HStack(spacing: 8) {
+            Button(action: { mode = .list }) {
+                Image(systemName: "chevron.left")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            if let tool = viewModel.tool(for: id) {
+                Image(systemName: tool.iconName)
+                    .foregroundStyle(.secondary)
+                Text(tool.displayName)
+                    .font(.headline)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     private var searchField: some View {
@@ -54,7 +115,10 @@ public struct SpotlightSearchView: View {
                         isSelected: row.result.toolID == viewModel.selectedID
                     )
                     .contentShape(Rectangle())
-                    .onTapGesture { onSubmit(row.result, true) }
+                    .onTapGesture {
+                        onSubmit(row.result, true)
+                        mode = .tool(row.result.toolID)
+                    }
                 }
             }
             .padding(6)
@@ -69,16 +133,16 @@ public struct SpotlightSearchView: View {
         .onKeyPress(.return) {
             handleReturn(withPreload: true); return .handled
         }
-        .onKeyPress(.escape) {
-            onCancel(); return .handled
-        }
     }
 
     private func handleReturn(withPreload: Bool) {
         if let id = viewModel.selectedID,
            let row = viewModel.rows.first(where: { $0.result.toolID == id })
         {
+            // Still fire onSubmit so the controller can call preloadBus.send,
+            // but switch to inline tool view instead of opening the popover.
             onSubmit(row.result, withPreload)
+            mode = .tool(row.result.toolID)
         }
     }
 }

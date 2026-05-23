@@ -51,6 +51,9 @@ final class SpotlightController {
         p.onReturnWithCommand = { [weak self] in
             self?.handleSubmitWithCommand()
         }
+        p.onCancel = { [weak self] in
+            self?.close()
+        }
         return p
     }
 
@@ -108,8 +111,7 @@ final class SpotlightController {
             text = nil
         }
         preloadBus.send(PreloadPayload(toolID: result.toolID, text: text))
-        close()
-        openPopover()
+        // Plan B: panel hosts the tool view inline; do not close + open popover.
     }
 
     /// v0.4 limitation: ⌘↩ from the keyboard is a no-op because we can't reach
@@ -121,30 +123,10 @@ final class SpotlightController {
     private func handleSubmitWithCommand() {
         guard let id = currentSelectedID() else { return }
         preloadBus.send(PreloadPayload(toolID: id, text: nil))
-        close()
-        openPopover()
     }
 
     private func currentSelectedID() -> ToolID? {
         // Always nil for v0.4 — see handleSubmitWithCommand header.
         return nil
-    }
-
-    // MARK: - Popover open (with Plan B)
-
-    private func openPopover() {
-        // Plan A: trigger the MenuBarExtra status item via its hidden NSStatusItem.
-        // This API is private-ish on macOS 14; if it stops working we fall back
-        // to rendering the tool view inside the Spotlight panel (Plan B — see
-        // Task 9 Step 8).
-        for window in NSApp.windows {
-            if let statusItem = window.value(forKey: "statusItem") as? NSStatusItem,
-               let button = statusItem.button
-            {
-                button.performClick(nil)
-                return
-            }
-        }
-        logger.warning("Could not find NSStatusItem to open popover programmatically")
     }
 }

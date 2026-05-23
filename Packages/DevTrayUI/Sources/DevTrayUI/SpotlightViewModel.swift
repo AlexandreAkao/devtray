@@ -28,6 +28,10 @@ public final class SpotlightViewModel: ObservableObject {
         scheduleRerank(debounceMillis: 80)
     }
 
+    public func tool(for id: ToolID) -> AnyTool? {
+        registry.find(byID: id)
+    }
+
     public func moveSelection(by delta: Int) {
         guard !rows.isEmpty else { selectedID = nil; return }
         let currentIndex = rows.firstIndex(where: { $0.result.toolID == selectedID }) ?? 0
