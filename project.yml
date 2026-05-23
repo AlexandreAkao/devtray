@@ -16,6 +16,9 @@ packages:
     path: Packages/DevTrayUI
   DevTrayStorage:
     path: Packages/DevTrayStorage
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 2.0.0
   JWTTool:
     path: Packages/Tools/JWTTool
   JSONTool:
@@ -51,6 +54,8 @@ targets:
       - package: DevTrayCore
       - package: DevTrayUI
       - package: DevTrayStorage
+      - package: KeyboardShortcuts
+        product: KeyboardShortcuts
       - package: JWTTool
       - package: JSONTool
       - package: Base64Tool
