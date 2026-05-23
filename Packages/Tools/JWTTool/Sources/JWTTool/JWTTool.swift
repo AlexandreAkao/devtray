@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import JWTToolKit
 
 public enum JWTTool: Tool {
     public static let id: ToolID = "jwt"
@@ -10,5 +11,11 @@ public enum JWTTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(JWTToolView())
+    }
+}
+
+public extension JWTTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        JWTClipboardMatcher.match(clipboard)
     }
 }

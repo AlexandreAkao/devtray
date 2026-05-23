@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import URLToolKit
 
 public enum URLTool: Tool {
     public static let id: ToolID = "url"
@@ -10,5 +11,11 @@ public enum URLTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(URLToolView())
+    }
+}
+
+public extension URLTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        URLClipboardMatcher.match(clipboard)
     }
 }

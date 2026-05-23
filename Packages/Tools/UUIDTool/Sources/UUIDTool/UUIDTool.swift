@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import UUIDToolKit
 
 public enum UUIDTool: Tool {
     public static let id: ToolID = "uuid"
@@ -10,5 +11,11 @@ public enum UUIDTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(UUIDToolView())
+    }
+}
+
+public extension UUIDTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        UUIDClipboardMatcher.match(clipboard)
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import Base64ToolKit
 
 public enum Base64Tool: Tool {
     public static let id: ToolID = "base64"
@@ -10,5 +11,11 @@ public enum Base64Tool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(Base64ToolView())
+    }
+}
+
+public extension Base64Tool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        Base64ClipboardMatcher.match(clipboard)
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import JSONToolKit
 
 public enum JSONTool: Tool {
     public static let id: ToolID = "json"
@@ -10,5 +11,11 @@ public enum JSONTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(JSONToolView())
+    }
+}
+
+public extension JSONTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        JSONClipboardMatcher.match(clipboard)
     }
 }

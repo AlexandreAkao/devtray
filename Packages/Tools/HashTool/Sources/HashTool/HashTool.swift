@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import HashToolKit
 
 public enum HashTool: Tool {
     public static let id: ToolID = "hash"
@@ -10,5 +11,11 @@ public enum HashTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(HashToolView())
+    }
+}
+
+public extension HashTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        HashClipboardMatcher.match(clipboard)
     }
 }

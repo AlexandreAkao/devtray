@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import TimestampToolKit
 
 public enum TimestampTool: Tool {
     public static let id: ToolID = "timestamp"
@@ -10,5 +11,11 @@ public enum TimestampTool: Tool {
 
     @MainActor public static func makeView() -> AnyView {
         AnyView(TimestampToolView())
+    }
+}
+
+public extension TimestampTool {
+    static func clipboardMatch(_ clipboard: String) -> ClipboardMatchScore? {
+        TimestampClipboardMatcher.match(clipboard)
     }
 }
