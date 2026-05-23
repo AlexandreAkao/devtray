@@ -100,6 +100,12 @@ public struct SpotlightSearchView: View {
                     viewModel.onQueryChanged()
                 }
                 .onSubmit { handleReturn(withPreload: true) }
+                .onKeyPress(.upArrow) {
+                    viewModel.moveSelection(by: -1); return .handled
+                }
+                .onKeyPress(.downArrow) {
+                    viewModel.moveSelection(by: 1); return .handled
+                }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
