@@ -117,6 +117,25 @@ final class SQLiteSnippetStoreTests: XCTestCase {
         XCTAssertEqual(results.count, 2)
     }
 
+    func test_save_upsert_preservesCreatedAt() async throws {
+        let store = try makeStore()
+        let created = Date(timeIntervalSince1970: 10)
+        let first = Snippet(id: "a", title: "One", content: "c", language: nil,
+                            tags: [], isFavorite: false,
+                            createdAt: created, updatedAt: Date(timeIntervalSince1970: 10))
+        try await store.save(first)
+        // Re-save same id with a later createdAt value; it must NOT overwrite the stored created_at.
+        let second = Snippet(id: "a", title: "Two", content: "c", language: nil,
+                             tags: [], isFavorite: false,
+                             createdAt: Date(timeIntervalSince1970: 999),
+                             updatedAt: Date(timeIntervalSince1970: 20))
+        try await store.save(second)
+        let all = try await store.all()
+        let s = try XCTUnwrap(all.first)
+        XCTAssertEqual(s.title, "Two")
+        XCTAssertEqual(s.createdAt, created)
+    }
+
     func test_incrementUseCount_incrementsAndStamps() async throws {
         let store = try makeStore()
         try await store.save(snippet("a", title: "A"))

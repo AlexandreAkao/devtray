@@ -1,11 +1,9 @@
 import Foundation
 import GRDB
 import DevTrayCore
-import os
 
 public final class SQLiteSnippetStore: SnippetStore, @unchecked Sendable {
     private let dbQueue: DatabaseQueue
-    private let logger = Logger(subsystem: "com.devtray.app", category: "storage")
 
     public init(dbQueue: DatabaseQueue) {
         self.dbQueue = dbQueue
@@ -74,6 +72,7 @@ public final class SQLiteSnippetStore: SnippetStore, @unchecked Sendable {
                 FROM snippets
                 JOIN snippets_fts ON snippets_fts.rowid = snippets.rowid
                 WHERE snippets_fts MATCH ?
+                -- bm25() returns more-negative values for better matches, so ASC puts best results first
                 ORDER BY bm25(snippets_fts), snippets.updated_at DESC
             """, arguments: [match]).map(Self.snippet(from:))
         }
