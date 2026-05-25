@@ -24,23 +24,9 @@ public final class SpotlightPanel: NSPanel {
     public override var canBecomeKey: Bool { true }
     public override var canBecomeMain: Bool { false }
 
-    /// Called by the controller before sending the regular `keyDown` to AppKit.
-    /// Allows intercepting `⌘↩` for "navigate without preload".
-    public var onReturnWithCommand: (() -> Void)?
-
     public var onCancel: (() -> Void)?
 
     public override func cancelOperation(_ sender: Any?) {
         onCancel?()
-    }
-
-    public override func keyDown(with event: NSEvent) {
-        let isReturn = event.keyCode == 36
-        let isCommand = event.modifierFlags.contains(.command)
-        if isReturn && isCommand {
-            onReturnWithCommand?()
-            return
-        }
-        super.keyDown(with: event)
     }
 }
