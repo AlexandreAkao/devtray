@@ -15,6 +15,9 @@ public enum SnippetArchive {
     public static func encode(_ snippets: [Snippet], exportedAt: Date) throws -> Data {
         let envelope = Envelope(version: currentVersion, exportedAt: exportedAt, snippets: snippets)
         let encoder = JSONEncoder()
+        // ISO8601 keeps the export human-readable, stable, and diffable.
+        // It drops sub-second precision, which is fine: snippet timestamps
+        // are display/sort values, not identity.
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(envelope)
