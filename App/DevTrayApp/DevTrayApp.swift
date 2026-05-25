@@ -83,7 +83,7 @@ private func makeSnippetStore() -> any SnippetStore {
         return try SQLiteSnippetStore.openDefault()
     } catch {
         Logger(subsystem: "com.devtray.app", category: "storage")
-            .error("SQLite snippet store open failed, using in-memory: \(error.localizedDescription, privacy: .public)")
+            .error("SQLite snippet store open failed, using in-memory store: \(error.localizedDescription, privacy: .public)")
         return InMemorySnippetStore()
     }
 }
