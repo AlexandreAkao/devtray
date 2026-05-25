@@ -17,11 +17,12 @@ public struct SnippetsToolView: View {
         }
         .frame(minWidth: 360, minHeight: 320)
         .task {
+            // Create the model once, but reload on every appearance so the list
+            // reflects writes made elsewhere (e.g. Settings → Import snippets).
             if model == nil {
-                let m = SnippetsModel(store: snippetStore)
-                model = m
-                await m.reload()
+                model = SnippetsModel(store: snippetStore)
             }
+            await model?.reload()
         }
     }
 
