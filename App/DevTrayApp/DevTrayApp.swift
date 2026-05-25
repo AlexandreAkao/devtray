@@ -100,7 +100,7 @@ private struct SettingsView: View {
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 480, height: 280)
+        .frame(width: 480, height: 320)
     }
 }
 
@@ -156,10 +156,10 @@ private struct GeneralTab: View {
             do {
                 let snippets = try await store.all()
                 let data = try SnippetArchive.encode(snippets, exportedAt: .now)
-                try data.write(to: url)
-                await report("Exported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
+                try data.write(to: url, options: .atomic)
+                report("Exported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
             } catch {
-                await report(error.localizedDescription, isError: true)
+                report(error.localizedDescription, isError: true)
             }
         }
     }
@@ -176,14 +176,13 @@ private struct GeneralTab: View {
                 for snippet in snippets {
                     try await store.save(snippet)
                 }
-                await report("Imported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
+                report("Imported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
             } catch {
-                await report(error.localizedDescription, isError: true)
+                report(error.localizedDescription, isError: true)
             }
         }
     }
 
-    @MainActor
     private func report(_ message: String, isError: Bool) {
         self.status = message
         self.isError = isError
