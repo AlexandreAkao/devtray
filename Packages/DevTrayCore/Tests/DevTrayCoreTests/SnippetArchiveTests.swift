@@ -47,4 +47,14 @@ final class SnippetArchiveTests: XCTestCase {
             }
         }
     }
+
+    func test_decode_validVersionMalformedSnippets_throwsParseFailure() throws {
+        let data = Data(#"{"version":1,"exportedAt":"1970-01-01T01:23:20Z","snippets":[{"nope":true}]}"#.utf8)
+        XCTAssertThrowsError(try SnippetArchive.decode(data)) { error in
+            guard case ToolError.parseFailure(let reason, _) = error else {
+                return XCTFail("expected parseFailure, got \(error)")
+            }
+            XCTAssertTrue(reason.contains("Could not read"))
+        }
+    }
 }

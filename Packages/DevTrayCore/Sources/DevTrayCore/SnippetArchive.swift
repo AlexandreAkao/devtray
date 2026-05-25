@@ -40,7 +40,7 @@ public enum SnippetArchive {
         guard probe.version == currentVersion else {
             throw ToolError.parseFailure(
                 reason: "Unsupported export version \(probe.version).",
-                hint: "This file was made by a newer version of DevTray.")
+                hint: "Expected version \(currentVersion).")
         }
 
         do {
