@@ -73,7 +73,11 @@ final class SpotlightController {
                 self?.close()
             }
         )
-        let host = NSHostingView(rootView: view.environment(\.snippetStore, snippetStore))
+        let host = NSHostingView(
+            rootView: view
+                .environment(\.snippetStore, snippetStore)
+                .environment(\.preloadBus, preloadBus)
+        )
         host.translatesAutoresizingMaskIntoConstraints = true
         host.autoresizingMask = [.width, .height]
         panel.contentView = host
