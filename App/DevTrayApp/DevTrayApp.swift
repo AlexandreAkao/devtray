@@ -52,6 +52,7 @@ struct DevTrayApp: App {
 
         Settings {
             SettingsView()
+                .environment(\.snippetStore, snippetStore)
         }
     }
 }
