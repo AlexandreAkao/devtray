@@ -10,6 +10,7 @@ struct SnippetEditorView: View {
     @State private var content: String = ""
     @State private var language: String = ""
     @State private var tagsText: String = ""
+    @State private var isFavorite: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -29,6 +30,14 @@ struct SnippetEditorView: View {
                 Button("Save") { save() }
                     .keyboardShortcut("s", modifiers: .command)
                 Button("Copy") { Task { await model.copyToPasteboard(current()) } }
+                Button {
+                    isFavorite.toggle()
+                } label: {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .foregroundStyle(isFavorite ? .yellow : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help(isFavorite ? "Unfavorite" : "Favorite")
                 Spacer()
                 Button(role: .destructive) {
                     Task { await model.delete(snippet) }
@@ -45,6 +54,7 @@ struct SnippetEditorView: View {
         content = snippet.content
         language = snippet.language ?? ""
         tagsText = snippet.tags.joined(separator: ", ")
+        isFavorite = snippet.isFavorite
     }
 
     private func current() -> Snippet {
@@ -56,6 +66,7 @@ struct SnippetEditorView: View {
             .components(separatedBy: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
+        edited.isFavorite = isFavorite
         return edited
     }
 
