@@ -51,9 +51,6 @@ final class SpotlightController {
 
     private func makePanel() -> SpotlightPanel {
         let p = SpotlightPanel()
-        p.onReturnWithCommand = { [weak self] in
-            self?.handleSubmitWithCommand()
-        }
         p.onCancel = { [weak self] in
             self?.close()
         }
@@ -76,7 +73,11 @@ final class SpotlightController {
                 self?.close()
             }
         )
-        let host = NSHostingView(rootView: view.environment(\.snippetStore, snippetStore))
+        let host = NSHostingView(
+            rootView: view
+                .environment(\.snippetStore, snippetStore)
+                .environment(\.preloadBus, preloadBus)
+        )
         host.translatesAutoresizingMaskIntoConstraints = true
         host.autoresizingMask = [.width, .height]
         panel.contentView = host
@@ -117,19 +118,4 @@ final class SpotlightController {
         // Plan B: panel hosts the tool view inline; do not close + open popover.
     }
 
-    /// v0.4 limitation: ⌘↩ from the keyboard is a no-op because we can't reach
-    /// into the SwiftUI view's `selectedID` from the AppKit `keyDown` override.
-    /// The bare `↩` path (via `onKeyPress(.return)` inside `SpotlightSearchView`)
-    /// and the mouse-tap path cover the common cases. A future iteration can
-    /// thread the current ToolID through `SpotlightPanel.onReturnWithCommand`
-    /// by sharing the view model with the panel directly.
-    private func handleSubmitWithCommand() {
-        guard let id = currentSelectedID() else { return }
-        preloadBus.send(PreloadPayload(toolID: id, text: nil))
-    }
-
-    private func currentSelectedID() -> ToolID? {
-        // Always nil for v0.4 — see handleSubmitWithCommand header.
-        return nil
-    }
 }

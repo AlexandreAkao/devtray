@@ -9,7 +9,7 @@ public final class SnippetsModel {
     public private(set) var snippets: [Snippet] = []
     public var query: String = ""
     public var showFavoritesOnly: Bool = false
-    public var errorMessage: String?
+    public private(set) var error: ToolError?
     public var selectedID: Snippet.ID?
 
     private let coordinator: SnippetsCoordinator
@@ -77,9 +77,11 @@ public final class SnippetsModel {
     private func run(_ work: () async throws -> Void) async {
         do {
             try await work()
-            errorMessage = nil
+            error = nil
+        } catch let toolError as ToolError {
+            error = toolError
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = .storageFailure(message: error.localizedDescription)
         }
     }
 }

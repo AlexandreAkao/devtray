@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Snippet: Identifiable, Hashable, Sendable {
+public struct Snippet: Identifiable, Hashable, Sendable, Codable {
     public typealias ID = String
 
     public let id: ID

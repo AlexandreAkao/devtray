@@ -1,4 +1,6 @@
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 import os
 import KeyboardShortcuts
 import DevTrayCore
@@ -50,6 +52,7 @@ struct DevTrayApp: App {
 
         Settings {
             SettingsView()
+                .environment(\.snippetStore, snippetStore)
         }
     }
 }
@@ -91,12 +94,14 @@ private func makeSnippetStore() -> any SnippetStore {
 private struct SettingsView: View {
     var body: some View {
         TabView {
+            GeneralTab()
+                .tabItem { Label("General", systemImage: "gearshape") }
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 480, height: 280)
+        .frame(width: 480, height: 320)
     }
 }
 
@@ -112,6 +117,82 @@ private struct ShortcutsTab: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+}
+
+private struct GeneralTab: View {
+    @Environment(\.snippetStore) private var store: any SnippetStore
+    @State private var status: String?
+    @State private var isError = false
+
+    var body: some View {
+        Form {
+            Section("Snippets") {
+                LabeledContent("Backup") {
+                    HStack {
+                        Button("Export snippets…") { exportSnippets() }
+                        Button("Import snippets…") { importSnippets() }
+                    }
+                }
+                Text("Export writes a JSON file you can import on another Mac. Import merges by id — existing snippets with the same id are updated, new ones are added.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if let status {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundStyle(isError ? .red : .secondary)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+
+    private func exportSnippets() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "DevTray-snippets-\(Self.dateStamp()).json"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task {
+            do {
+                let snippets = try await store.all()
+                let data = try SnippetArchive.encode(snippets, exportedAt: .now)
+                try data.write(to: url, options: .atomic)
+                report("Exported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
+            } catch {
+                report(error.localizedDescription, isError: true)
+            }
+        }
+    }
+
+    private func importSnippets() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task {
+            do {
+                let data = try Data(contentsOf: url)
+                let snippets = try SnippetArchive.decode(data)
+                for snippet in snippets {
+                    try await store.save(snippet)
+                }
+                report("Imported \(snippets.count) snippet\(snippets.count == 1 ? "" : "s").", isError: false)
+            } catch {
+                report(error.localizedDescription, isError: true)
+            }
+        }
+    }
+
+    private func report(_ message: String, isError: Bool) {
+        self.status = message
+        self.isError = isError
+    }
+
+    private static func dateStamp() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: .now)
     }
 }
 

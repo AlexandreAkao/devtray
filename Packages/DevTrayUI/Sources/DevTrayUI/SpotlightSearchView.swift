@@ -100,6 +100,11 @@ public struct SpotlightSearchView: View {
                     viewModel.onQueryChanged()
                 }
                 .onSubmit { handleReturn(withPreload: true) }
+                .onKeyPress(phases: .down) { press in
+                    guard press.key == .return, press.modifiers.contains(.command) else { return .ignored }
+                    handleReturn(withPreload: false)
+                    return .handled
+                }
                 .onKeyPress(.upArrow) {
                     viewModel.moveSelection(by: -1); return .handled
                 }
@@ -138,6 +143,10 @@ public struct SpotlightSearchView: View {
         }
         .onKeyPress(.return) {
             handleReturn(withPreload: true); return .handled
+        }
+        .onKeyPress(phases: .down) { press in
+            guard press.key == .return, press.modifiers.contains(.command) else { return .ignored }
+            handleReturn(withPreload: false); return .handled
         }
     }
 
