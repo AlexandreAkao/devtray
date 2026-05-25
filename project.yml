@@ -33,6 +33,8 @@ packages:
     path: Packages/Tools/UUIDTool
   TimestampTool:
     path: Packages/Tools/TimestampTool
+  SnippetsTool:
+    path: Packages/Tools/SnippetsTool
 targets:
   DevTrayApp:
     type: application
@@ -63,6 +65,7 @@ targets:
       - package: HashTool
       - package: UUIDTool
       - package: TimestampTool
+      - package: SnippetsTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app
