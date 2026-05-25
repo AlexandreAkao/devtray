@@ -8,14 +8,17 @@ import DevTrayUI
 final class SpotlightController {
     private let registry: ToolRegistry
     private let usageStore: any UsageStore
+    private let snippetStore: any SnippetStore
     private let preloadBus: PreloadBus
     private var panel: SpotlightPanel?
     private var resignObserver: Any?
     private let logger = Logger(subsystem: "com.devtray.app", category: "spotlight")
 
-    init(registry: ToolRegistry, usageStore: any UsageStore, preloadBus: PreloadBus) {
+    init(registry: ToolRegistry, usageStore: any UsageStore,
+         snippetStore: any SnippetStore, preloadBus: PreloadBus) {
         self.registry = registry
         self.usageStore = usageStore
+        self.snippetStore = snippetStore
         self.preloadBus = preloadBus
     }
 
@@ -73,7 +76,7 @@ final class SpotlightController {
                 self?.close()
             }
         )
-        let host = NSHostingView(rootView: view)
+        let host = NSHostingView(rootView: view.environment(\.snippetStore, snippetStore))
         host.translatesAutoresizingMaskIntoConstraints = true
         host.autoresizingMask = [.width, .height]
         panel.contentView = host

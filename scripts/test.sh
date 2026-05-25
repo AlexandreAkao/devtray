@@ -18,6 +18,7 @@ PACKAGES=(
     "Packages/Tools/HashTool"
     "Packages/Tools/UUIDTool"
     "Packages/Tools/TimestampTool"
+    "Packages/Tools/SnippetsTool"
 )
 
 failed=()

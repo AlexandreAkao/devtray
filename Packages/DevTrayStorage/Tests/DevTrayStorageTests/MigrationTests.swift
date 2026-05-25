@@ -41,4 +41,80 @@ final class MigrationTests: XCTestCase {
         try migrator.migrate(queue)
         XCTAssertNoThrow(try migrator.migrate(queue))
     }
+
+    func test_v2_createsSnippetsTableWithExpectedColumns() throws {
+        let queue = try makeMigratedQueue()
+        let columns: [Row] = try queue.read { db in
+            try Row.fetchAll(db, sql: "PRAGMA table_info(snippets)")
+        }
+        let names = columns.map { $0["name"] as String }
+        XCTAssertEqual(names, [
+            "id", "title", "content", "language", "tags",
+            "is_favorite", "created_at", "updated_at", "use_count", "last_used_at"
+        ])
+    }
+
+    func test_v2_createsIndexes() throws {
+        let queue = try makeMigratedQueue()
+        let indexNames: [String] = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'index' AND tbl_name = 'snippets'
+            """)
+        }
+        XCTAssertTrue(indexNames.contains("idx_snippets_updated"))
+        XCTAssertTrue(indexNames.contains("idx_snippets_favorite"))
+    }
+
+    func test_v2_createsFTSTable() throws {
+        let queue = try makeMigratedQueue()
+        let names: [String] = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'table' AND name = 'snippets_fts'
+            """)
+        }
+        XCTAssertEqual(names, ["snippets_fts"])
+    }
+
+    func test_v1ToV2_preservesToolUsageData() throws {
+        let queue = try DatabaseQueue()
+        var migrator = DatabaseMigrator()
+        Migrations.register(on: &migrator)
+
+        // Migrate to v1 only, then seed tool_usage.
+        try migrator.migrate(queue, upTo: "v1_tool_usage")
+        try queue.write { db in
+            try db.execute(sql: "INSERT INTO tool_usage (tool_id, used_at) VALUES (?, ?)",
+                           arguments: ["json", 123.0])
+            try db.execute(sql: "INSERT INTO tool_usage (tool_id, used_at) VALUES (?, ?)",
+                           arguments: ["jwt", 456.0])
+        }
+
+        // Apply v2.
+        try migrator.migrate(queue)
+
+        // tool_usage rows survive untouched.
+        let usageCount = try queue.read { db in
+            try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tool_usage") ?? -1
+        }
+        XCTAssertEqual(usageCount, 2)
+
+        // A post-migration snippet round-trips and is FTS-searchable.
+        try queue.write { db in
+            try db.execute(sql: """
+                INSERT INTO snippets (id, title, content, language, tags,
+                    is_favorite, created_at, updated_at, use_count, last_used_at)
+                VALUES ('s1', 'Greeting', 'hello there', NULL, '[]', 0, 1.0, 1.0, 0, NULL)
+            """)
+        }
+        let found = try queue.read { db in
+            try Int.fetchOne(db, sql: """
+                SELECT COUNT(*) FROM snippets
+                JOIN snippets_fts ON snippets_fts.rowid = snippets.rowid
+                WHERE snippets_fts MATCH 'hello'
+            """) ?? -1
+        }
+        XCTAssertEqual(found, 1)
+    }
 }

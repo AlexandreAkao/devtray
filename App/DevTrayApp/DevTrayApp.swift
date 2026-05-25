@@ -11,11 +11,13 @@ import URLTool
 import HashTool
 import UUIDTool
 import TimestampTool
+import SnippetsTool
 
 @main
 struct DevTrayApp: App {
     @StateObject private var registry: ToolRegistry
     private let usageStore: any UsageStore = makeUsageStore()
+    private let snippetStore: any SnippetStore = makeSnippetStore()
     private let preloadBus = PreloadBus()
     @State private var spotlightController: SpotlightController?
 
@@ -25,6 +27,7 @@ struct DevTrayApp: App {
         let controller = SpotlightController(
             registry: registryValue,
             usageStore: usageStore,
+            snippetStore: snippetStore,
             preloadBus: preloadBus
         )
         _spotlightController = State(initialValue: controller)
@@ -40,6 +43,7 @@ struct DevTrayApp: App {
             PopoverRoot()
                 .environmentObject(registry)
                 .environment(\.usageStore, usageStore)
+                .environment(\.snippetStore, snippetStore)
                 .environment(\.preloadBus, preloadBus)
         }
         .menuBarExtraStyle(.window)
@@ -60,6 +64,7 @@ private func makeRegistry() -> ToolRegistry {
     r.register(HashTool.self)
     r.register(UUIDTool.self)
     r.register(TimestampTool.self)
+    r.register(SnippetsTool.self)
     return r
 }
 
@@ -70,6 +75,16 @@ private func makeUsageStore() -> any UsageStore {
         Logger(subsystem: "com.devtray.app", category: "storage")
             .error("SQLite open failed, using in-memory store: \(error.localizedDescription, privacy: .public)")
         return InMemoryUsageStore()
+    }
+}
+
+private func makeSnippetStore() -> any SnippetStore {
+    do {
+        return try SQLiteSnippetStore.openDefault()
+    } catch {
+        Logger(subsystem: "com.devtray.app", category: "storage")
+            .error("SQLite snippet store open failed, using in-memory store: \(error.localizedDescription, privacy: .public)")
+        return InMemorySnippetStore()
     }
 }
 

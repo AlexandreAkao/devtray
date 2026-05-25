@@ -15,6 +15,7 @@ let package = Package(
         .package(path: "Packages/Tools/HashTool"),
         .package(path: "Packages/Tools/UUIDTool"),
         .package(path: "Packages/Tools/TimestampTool"),
+        .package(path: "Packages/Tools/SnippetsTool"),
     ],
     targets: []
 )
