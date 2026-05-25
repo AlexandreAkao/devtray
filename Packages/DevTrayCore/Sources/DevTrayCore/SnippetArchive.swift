@@ -22,4 +22,33 @@ public enum SnippetArchive {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(envelope)
     }
+
+    public static func decode(_ data: Data) throws -> [Snippet] {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        struct VersionProbe: Codable { let version: Int }
+        let probe: VersionProbe
+        do {
+            probe = try decoder.decode(VersionProbe.self, from: data)
+        } catch {
+            throw ToolError.parseFailure(
+                reason: "Not a valid DevTray snippet export.",
+                hint: error.localizedDescription)
+        }
+
+        guard probe.version == currentVersion else {
+            throw ToolError.parseFailure(
+                reason: "Unsupported export version \(probe.version).",
+                hint: "This file was made by a newer version of DevTray.")
+        }
+
+        do {
+            return try decoder.decode(Envelope.self, from: data).snippets
+        } catch {
+            throw ToolError.parseFailure(
+                reason: "Could not read snippets from export.",
+                hint: error.localizedDescription)
+        }
+    }
 }
