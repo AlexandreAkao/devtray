@@ -9,7 +9,7 @@ public final class SnippetsModel {
     public private(set) var snippets: [Snippet] = []
     public var query: String = ""
     public var showFavoritesOnly: Bool = false
-    public var error: ToolError?
+    public private(set) var error: ToolError?
     public var selectedID: Snippet.ID?
 
     private let coordinator: SnippetsCoordinator
