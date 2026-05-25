@@ -1,5 +1,6 @@
 import SwiftUI
 import DevTrayCore
+import DevTrayUI
 
 struct SnippetsListView: View {
     @Bindable var model: SnippetsModel
@@ -26,11 +27,8 @@ struct SnippetsListView: View {
                 .help("New snippet")
             }
 
-            if let message = model.errorMessage {
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            if let error = model.error {
+                InlineErrorBanner(error: error)
             }
 
             List(selection: $model.selectedID) {
