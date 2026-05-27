@@ -19,6 +19,9 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: 2.0.0
+  Yams:
+    url: https://github.com/jpsim/Yams
+    from: 5.0.0
   JWTTool:
     path: Packages/Tools/JWTTool
   JSONTool:
@@ -35,6 +38,16 @@ packages:
     path: Packages/Tools/TimestampTool
   SnippetsTool:
     path: Packages/Tools/SnippetsTool
+  RegexTool:
+    path: Packages/Tools/RegexTool
+  DiffTool:
+    path: Packages/Tools/DiffTool
+  ColorTool:
+    path: Packages/Tools/ColorTool
+  CronTool:
+    path: Packages/Tools/CronTool
+  YAMLTool:
+    path: Packages/Tools/YAMLTool
 targets:
   DevTrayApp:
     type: application
@@ -46,8 +59,8 @@ targets:
       properties:
         LSUIElement: true
         CFBundleDisplayName: DevTray
-        CFBundleShortVersionString: "0.6.0"
-        CFBundleVersion: "6"
+        CFBundleShortVersionString: "0.7.0"
+        CFBundleVersion: "7"
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
       properties:
@@ -66,6 +79,11 @@ targets:
       - package: UUIDTool
       - package: TimestampTool
       - package: SnippetsTool
+      - package: RegexTool
+      - package: DiffTool
+      - package: ColorTool
+      - package: CronTool
+      - package: YAMLTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app

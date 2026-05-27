@@ -19,6 +19,11 @@ PACKAGES=(
     "Packages/Tools/UUIDTool"
     "Packages/Tools/TimestampTool"
     "Packages/Tools/SnippetsTool"
+    "Packages/Tools/RegexTool"
+    "Packages/Tools/DiffTool"
+    "Packages/Tools/ColorTool"
+    "Packages/Tools/CronTool"
+    "Packages/Tools/YAMLTool"
 )
 
 failed=()
