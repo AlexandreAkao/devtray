@@ -37,6 +37,8 @@ packages:
     path: Packages/Tools/SnippetsTool
   RegexTool:
     path: Packages/Tools/RegexTool
+  DiffTool:
+    path: Packages/Tools/DiffTool
 targets:
   DevTrayApp:
     type: application
@@ -69,6 +71,7 @@ targets:
       - package: TimestampTool
       - package: SnippetsTool
       - package: RegexTool
+      - package: DiffTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app

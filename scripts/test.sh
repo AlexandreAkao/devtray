@@ -20,6 +20,7 @@ PACKAGES=(
     "Packages/Tools/TimestampTool"
     "Packages/Tools/SnippetsTool"
     "Packages/Tools/RegexTool"
+    "Packages/Tools/DiffTool"
 )
 
 failed=()

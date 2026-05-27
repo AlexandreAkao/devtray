@@ -15,6 +15,7 @@ import UUIDTool
 import TimestampTool
 import SnippetsTool
 import RegexTool
+import DiffTool
 
 @main
 struct DevTrayApp: App {
@@ -70,6 +71,7 @@ private func makeRegistry() -> ToolRegistry {
     r.register(TimestampTool.self)
     r.register(SnippetsTool.self)
     r.register(RegexTool.self)
+    r.register(DiffTool.self)
     return r
 }
 
