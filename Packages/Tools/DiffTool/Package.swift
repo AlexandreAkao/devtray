@@ -14,8 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "DiffToolKit",
-            dependencies: [.product(name: "DevTrayCore", package: "DevTrayCore")]
+            name: "DiffToolKit"
         ),
         .target(
             name: "DiffTool",
