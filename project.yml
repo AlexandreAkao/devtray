@@ -19,6 +19,9 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: 2.0.0
+  Yams:
+    url: https://github.com/jpsim/Yams
+    from: 5.0.0
   JWTTool:
     path: Packages/Tools/JWTTool
   JSONTool:
@@ -43,6 +46,8 @@ packages:
     path: Packages/Tools/ColorTool
   CronTool:
     path: Packages/Tools/CronTool
+  YAMLTool:
+    path: Packages/Tools/YAMLTool
 targets:
   DevTrayApp:
     type: application
@@ -78,6 +83,7 @@ targets:
       - package: DiffTool
       - package: ColorTool
       - package: CronTool
+      - package: YAMLTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app

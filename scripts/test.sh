@@ -23,6 +23,7 @@ PACKAGES=(
     "Packages/Tools/DiffTool"
     "Packages/Tools/ColorTool"
     "Packages/Tools/CronTool"
+    "Packages/Tools/YAMLTool"
 )
 
 failed=()

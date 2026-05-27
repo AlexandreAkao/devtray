@@ -18,6 +18,7 @@ import RegexTool
 import DiffTool
 import ColorTool
 import CronTool
+import YAMLTool
 
 @main
 struct DevTrayApp: App {
@@ -76,6 +77,7 @@ private func makeRegistry() -> ToolRegistry {
     r.register(DiffTool.self)
     r.register(ColorTool.self)
     r.register(CronTool.self)
+    r.register(YAMLTool.self)
     return r
 }
 
