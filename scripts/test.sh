@@ -22,6 +22,7 @@ PACKAGES=(
     "Packages/Tools/RegexTool"
     "Packages/Tools/DiffTool"
     "Packages/Tools/ColorTool"
+    "Packages/Tools/CronTool"
 )
 
 failed=()

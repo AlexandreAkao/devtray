@@ -17,6 +17,7 @@ import SnippetsTool
 import RegexTool
 import DiffTool
 import ColorTool
+import CronTool
 
 @main
 struct DevTrayApp: App {
@@ -74,6 +75,7 @@ private func makeRegistry() -> ToolRegistry {
     r.register(RegexTool.self)
     r.register(DiffTool.self)
     r.register(ColorTool.self)
+    r.register(CronTool.self)
     return r
 }
 
