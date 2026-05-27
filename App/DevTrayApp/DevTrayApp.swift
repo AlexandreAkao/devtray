@@ -14,6 +14,7 @@ import HashTool
 import UUIDTool
 import TimestampTool
 import SnippetsTool
+import RegexTool
 
 @main
 struct DevTrayApp: App {
@@ -68,6 +69,7 @@ private func makeRegistry() -> ToolRegistry {
     r.register(UUIDTool.self)
     r.register(TimestampTool.self)
     r.register(SnippetsTool.self)
+    r.register(RegexTool.self)
     return r
 }
 
