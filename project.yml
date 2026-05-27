@@ -39,6 +39,8 @@ packages:
     path: Packages/Tools/RegexTool
   DiffTool:
     path: Packages/Tools/DiffTool
+  ColorTool:
+    path: Packages/Tools/ColorTool
 targets:
   DevTrayApp:
     type: application
@@ -72,6 +74,7 @@ targets:
       - package: SnippetsTool
       - package: RegexTool
       - package: DiffTool
+      - package: ColorTool
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app
