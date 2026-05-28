@@ -22,5 +22,11 @@
 	<string>8</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>SUFeedURL</key>
+	<string>https://alexandreakao.github.io/devtray/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>PLACEHOLDER_REPLACE_VIA_GENERATE_KEYS</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>604800</integer>
 </dict>
 </plist>
