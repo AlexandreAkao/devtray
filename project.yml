@@ -22,6 +22,9 @@ packages:
   Yams:
     url: https://github.com/jpsim/Yams
     from: 5.0.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.9.2
   JWTTool:
     path: Packages/Tools/JWTTool
   JSONTool:
@@ -71,6 +74,8 @@ targets:
       - package: DevTrayStorage
       - package: KeyboardShortcuts
         product: KeyboardShortcuts
+      - package: Sparkle
+        product: Sparkle
       - package: JWTTool
       - package: JSONTool
       - package: Base64Tool
