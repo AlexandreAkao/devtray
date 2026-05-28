@@ -25,7 +25,7 @@
 	<key>SUFeedURL</key>
 	<string>https://alexandreakao.github.io/devtray/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>PLACEHOLDER_REPLACE_VIA_GENERATE_KEYS</string>
+	<string>ZxyqDIzwmdH+/nfaxtGzTqG+ZZ3ZgNob8Ei0gS3k948=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>604800</integer>
 </dict>

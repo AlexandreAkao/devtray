@@ -65,7 +65,7 @@ targets:
         CFBundleShortVersionString: "0.8.0"
         CFBundleVersion: "8"
         SUFeedURL: https://alexandreakao.github.io/devtray/appcast.xml
-        SUPublicEDKey: PLACEHOLDER_REPLACE_VIA_GENERATE_KEYS
+        SUPublicEDKey: "ZxyqDIzwmdH+/nfaxtGzTqG+ZZ3ZgNob8Ei0gS3k948="
         SUScheduledCheckInterval: 604800
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
