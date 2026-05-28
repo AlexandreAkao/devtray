@@ -1,0 +1,126 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build · ad-hoc sign · publish
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Read version
+        id: ver
+        run: |
+          PLIST="App/DevTrayApp/Info.plist"
+          SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST")
+          echo "short=$SHORT" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Version $SHORT (build $BUILD) for tag ${GITHUB_REF_NAME}"
+
+      - name: Guard against placeholder public key
+        run: |
+          PUBKEY=$(/usr/libexec/PlistBuddy -c "Print :SUPublicEDKey" App/DevTrayApp/Info.plist)
+          if [ -z "$PUBKEY" ]; then
+            echo "::error::SUPublicEDKey is missing or blank in Info.plist."
+            exit 1
+          fi
+          if echo "$PUBKEY" | grep -q PLACEHOLDER; then
+            echo "::error::SUPublicEDKey is still the placeholder — set the real EdDSA public key before releasing."
+            exit 1
+          fi
+
+      - name: Build (Release, unsigned)
+        run: |
+          xcodebuild \
+            -project DevTray.xcodeproj \
+            -scheme DevTrayApp \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Ad-hoc sign with hardened runtime
+        run: |
+          APP="build/Build/Products/Release/DevTray.app"
+          codesign --force --deep --options runtime --sign - "$APP"
+          codesign --verify --deep --strict "$APP"
+
+      - name: Zip
+        id: zip
+        run: |
+          APP="build/Build/Products/Release/DevTray.app"
+          ZIP="DevTray-${{ steps.ver.outputs.short }}.zip"
+          ditto -c -k --keepParent "$APP" "$ZIP"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "length=$(stat -f%z "$ZIP")" >> "$GITHUB_OUTPUT"
+
+      - name: Download Sparkle tools
+        run: |
+          SPARKLE_VER="2.9.2"
+          curl -fL -o sparkle.tar.xz \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VER}/Sparkle-${SPARKLE_VER}.tar.xz"
+          mkdir -p sparkle-tools
+          tar -xf sparkle.tar.xz -C sparkle-tools
+
+      - name: EdDSA-sign the archive
+        id: sign
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          SIGN_UPDATE="$(find sparkle-tools -name sign_update -type f | head -1)"
+          if [ -z "$SIGN_UPDATE" ]; then echo "::error::sign_update not found in Sparkle tools"; exit 1; fi
+          KEYFILE="$(mktemp)"
+          trap 'rm -f "$KEYFILE"' EXIT
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$KEYFILE"
+          OUT=$("$SIGN_UPDATE" -f "$KEYFILE" "${{ steps.zip.outputs.zip }}")
+          echo "sign_update: $OUT"
+          SIG=$(echo "$OUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
+          if [ -z "$SIG" ]; then echo "::error::failed to parse edSignature"; exit 1; fi
+          echo "sig=$SIG" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "${{ steps.zip.outputs.zip }}" \
+            --title "${{ steps.ver.outputs.short }}" \
+            --generate-notes
+
+      - name: Update appcast on main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          # The zip is an untracked file in the workspace root; `git checkout main`
+          # only touches tracked files, so it survives the branch switch.
+          git checkout main
+          URL="https://github.com/AlexandreAkao/devtray/releases/download/${GITHUB_REF_NAME}/${{ steps.zip.outputs.zip }}"
+          ./scripts/appcast.sh \
+            "${{ steps.ver.outputs.short }}" \
+            "${{ steps.ver.outputs.build }}" \
+            "$URL" \
+            "${{ steps.sign.outputs.sig }}" \
+            "${{ steps.zip.outputs.length }}"
+          git add docs/appcast.xml
+          git commit -m "chore(release): appcast ${GITHUB_REF_NAME}" || { echo "no appcast change"; exit 0; }
+          # Rebase-and-retry once in case main advanced (e.g. a re-run or concurrent tag).
+          git push origin main || (git pull --rebase origin main && git push origin main)
