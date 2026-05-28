@@ -11,7 +11,16 @@ public struct PopoverRoot: View {
     @State private var topTools: [ToolUsageRank] = []
     @State private var hasBootstrapped: Bool = false
 
-    public init() {}
+    private let onCheckForUpdates: (() -> Void)?
+    private let canCheckForUpdates: Bool
+
+    public init(
+        onCheckForUpdates: (() -> Void)? = nil,
+        canCheckForUpdates: Bool = false
+    ) {
+        self.onCheckForUpdates = onCheckForUpdates
+        self.canCheckForUpdates = canCheckForUpdates
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -104,6 +113,13 @@ public struct PopoverRoot: View {
                 }
             }
             Spacer()
+            if let onCheckForUpdates {
+                Button("Check for Updates…", action: onCheckForUpdates)
+                    .buttonStyle(.plain)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .disabled(!canCheckForUpdates)
+            }
             Text("DevTray v\(AppMetadata.version)")
                 .font(.caption)
                 .foregroundStyle(.tertiary)

@@ -48,7 +48,10 @@ struct DevTrayApp: App {
 
     var body: some Scene {
         MenuBarExtra("DevTray", systemImage: "wrench.adjustable") {
-            PopoverRoot()
+            PopoverRoot(
+                onCheckForUpdates: { updater.checkForUpdates() },
+                canCheckForUpdates: updater.canCheckForUpdates
+            )
                 .environmentObject(registry)
                 .environment(\.usageStore, usageStore)
                 .environment(\.snippetStore, snippetStore)
