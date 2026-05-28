@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>DevTray</title>
+    <link>https://alexandreakao.github.io/devtray/appcast.xml</link>
+    <description>DevTray release feed</description>
+    <language>en</language>
+    <!-- BEGIN ITEMS -->
+  </channel>
+</rss>
