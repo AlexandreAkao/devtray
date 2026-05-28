@@ -26,7 +26,10 @@ public struct SnippetsToolView: View {
         }
     }
 
-    @ViewBuilder
+    // @MainActor is explicit here because this helper reads the @MainActor
+    // SnippetsModel.selectedSnippet from outside `body`; Swift 5.10 (CI's
+    // Xcode 15.4) does not infer the isolation that Swift 6 does for Views.
+    @MainActor @ViewBuilder
     private func content(_ model: SnippetsModel) -> some View {
         VStack(spacing: 0) {
             SnippetsListView(model: model)
