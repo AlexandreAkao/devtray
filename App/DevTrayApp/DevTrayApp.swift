@@ -23,6 +23,7 @@ import YAMLTool
 @main
 struct DevTrayApp: App {
     @StateObject private var registry: ToolRegistry
+    @StateObject private var updater = UpdaterController()
     private let usageStore: any UsageStore = makeUsageStore()
     private let snippetStore: any SnippetStore = makeSnippetStore()
     private let preloadBus = PreloadBus()
@@ -58,6 +59,7 @@ struct DevTrayApp: App {
         Settings {
             SettingsView()
                 .environment(\.snippetStore, snippetStore)
+                .environmentObject(updater)
         }
     }
 }
@@ -207,6 +209,8 @@ private struct GeneralTab: View {
 }
 
 private struct AboutTab: View {
+    @EnvironmentObject private var updater: UpdaterController
+
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "wrench.adjustable")
@@ -217,6 +221,8 @@ private struct AboutTab: View {
             Text("Version \(AppMetadata.version)")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+            Button("Check for Updates…") { updater.checkForUpdates() }
+                .disabled(!updater.canCheckForUpdates)
             Spacer()
             Text("MIT License · github.com/AlexandreAkao/devtray")
                 .font(.caption)
