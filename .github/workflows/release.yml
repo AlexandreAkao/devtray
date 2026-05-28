@@ -34,6 +34,10 @@ jobs:
           echo "short=$SHORT" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD" >> "$GITHUB_OUTPUT"
           echo "Version $SHORT (build $BUILD) for tag ${GITHUB_REF_NAME}"
+          if [ "v${SHORT}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match plist version v${SHORT}"
+            exit 1
+          fi
 
       - name: Guard against placeholder public key
         run: |
