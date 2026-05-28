@@ -26,6 +26,22 @@ PACKAGES=(
     "Packages/Tools/YAMLTool"
 )
 
+# --list: emit a JSON array of packages that have a test target (single
+# source of truth for the CI matrix in .github/workflows/test.yml).
+if [[ "${1:-}" == "--list" ]]; then
+    json="["
+    sep=""
+    for pkg in "${PACKAGES[@]}"; do
+        [[ -d "$pkg" ]] || continue
+        grep -q "testTarget" "$pkg/Package.swift" 2>/dev/null || continue
+        json+="${sep}\"${pkg}\""
+        sep=","
+    done
+    json+="]"
+    echo "$json"
+    exit 0
+fi
+
 failed=()
 for pkg in "${PACKAGES[@]}"; do
     if [[ ! -d "$pkg" ]]; then
