@@ -205,3 +205,9 @@ jobs:
           git commit -m "chore(release): appcast ${GITHUB_REF_NAME}" || { echo "no appcast change"; exit 0; }
           # Rebase-and-retry once in case main advanced (e.g. a re-run or concurrent tag).
           git push origin main || (git pull --rebase origin main && git push origin main)
+
+      - name: Cleanup secrets
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" || true
+          rm -f /tmp/key.p8 "$RUNNER_TEMP/cert.p12"
