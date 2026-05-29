@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import DevTrayCore
 import DevTrayUI
@@ -15,11 +16,21 @@ public struct Base64ToolView: View {
     @State private var output: String = ""
     @State private var error: ToolError?
     @State private var mode: Mode = .encode
+    @State private var fileName: String?
 
     public init() {}
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if mode == .encode {
+                HStack {
+                    Button("Choose file…") { chooseFile() }
+                    if let fileName {
+                        Text(fileName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+            }
+
             Picker("Mode", selection: $mode) {
                 ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
             }
@@ -38,7 +49,18 @@ public struct Base64ToolView: View {
             }
 
             if !output.isEmpty {
-                MonospaceOutput(output)
+                if output.count > 20_000 {
+                    HStack {
+                        Text("\(output.count) chars").font(.caption).foregroundStyle(.secondary)
+                        Button("Copy output") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(output, forType: .string)
+                        }
+                    }
+                    MonospaceOutput(String(output.prefix(20_000)) + "\n… (truncated; use Copy)", maxHeight: 160)
+                } else {
+                    MonospaceOutput(output)
+                }
             }
         }
         .onReceive(preloadBus.$pending) { _ in
@@ -58,7 +80,26 @@ public struct Base64ToolView: View {
         _ = preloadBus.consume()
     }
 
+    private func chooseFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            // Loads the whole file into memory; fine for dev-tool file sizes.
+            let data = try Data(contentsOf: url)
+            fileName = url.lastPathComponent
+            output = Base64Engine.encode(data)
+            error = nil
+        } catch {
+            fileName = nil
+            output = ""
+            self.error = .invalidInput(reason: "Could not read \(url.lastPathComponent): \(error.localizedDescription)")
+        }
+    }
+
     private func recompute() {
+        fileName = nil
         guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             output = ""
             error = nil

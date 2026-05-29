@@ -12,6 +12,10 @@ public enum Base64Engine {
         return .success(data.base64EncodedString())
     }
 
+    public static func encode(_ data: Data) -> String {
+        data.base64EncodedString()
+    }
+
     public static func decode(_ raw: String) -> Result<String, ToolError> {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
