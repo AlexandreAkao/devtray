@@ -9,4 +9,11 @@ internal enum Base64URL {
         s.append(String(repeating: "=", count: padding))
         return Data(base64Encoded: s)
     }
+
+    static func encode(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
 }
