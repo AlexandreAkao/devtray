@@ -6,5 +6,13 @@
     <description>DevTray release feed</description>
     <language>en</language>
     <!-- BEGIN ITEMS -->
+    <item>
+      <title>0.8.0</title>
+      <sparkle:version>8</sparkle:version>
+      <sparkle:shortVersionString>0.8.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Fri, 29 May 2026 19:33:43 +0000</pubDate>
+      <enclosure url="https://github.com/AlexandreAkao/devtray/releases/download/v0.8.0/DevTray-0.8.0.zip" sparkle:edSignature="IzU6B/5mglVRHUbeyG4exQJVDQ2Ujg9Z1RgxutMcfNKJhKcT4aUdnDHONrBywwBIxJ72qtnm/t8LcYTyBhS8DQ==" length="4769097" type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
