@@ -63,14 +63,14 @@ jobs:
 
       - name: Ad-hoc sign with hardened runtime
         run: |
-          APP="build/Build/Products/Release/DevTray.app"
+          APP="build/Build/Products/Release/DevTrayApp.app"
           codesign --force --deep --options runtime --sign - "$APP"
           codesign --verify --deep --strict "$APP"
 
       - name: Zip
         id: zip
         run: |
-          APP="build/Build/Products/Release/DevTray.app"
+          APP="build/Build/Products/Release/DevTrayApp.app"
           ZIP="DevTray-${{ steps.ver.outputs.short }}.zip"
           ditto -c -k --keepParent "$APP" "$ZIP"
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
