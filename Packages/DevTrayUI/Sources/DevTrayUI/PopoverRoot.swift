@@ -137,7 +137,7 @@ public struct PopoverRoot: View {
     private var footer: some View {
         HStack(spacing: 6) {
             ForEach(topTools, id: \.toolID) { rank in
-                if let tool = registry.find(byID: rank.toolID) {
+                if let tool = registry.find(byID: rank.toolID), toolPreferences.isEnabled(tool.id) {
                     FrequentToolChip(tool: tool) {
                         selectedToolID = tool.id
                     }
