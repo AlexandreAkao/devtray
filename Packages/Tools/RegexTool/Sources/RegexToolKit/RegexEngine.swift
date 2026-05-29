@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public struct RegexFlags: OptionSet, Sendable {
     public let rawValue: Int
@@ -19,8 +19,8 @@ public struct RegexFlags: OptionSet, Sendable {
 
 public struct RegexGroup: Equatable, Sendable {
     public let index: Int
-    public let name: String?       // reserved; always nil in v0.7 (numbered groups only)
-    public let value: String?      // nil when the group did not participate
+    public let name: String? // reserved; always nil in v0.7 (numbered groups only)
+    public let value: String? // nil when the group did not participate
     public init(index: Int, name: String?, value: String?) {
         self.index = index; self.name = name; self.value = value
     }
@@ -49,7 +49,7 @@ public enum RegexEngine {
         regex.enumerateMatches(in: input, options: [], range: full) { result, _, _ in
             guard let result else { return }
             var groups: [RegexGroup] = []
-            for i in 0..<result.numberOfRanges {
+            for i in 0 ..< result.numberOfRanges {
                 let nsr = result.range(at: i)
                 if nsr.location == NSNotFound {
                     groups.append(RegexGroup(index: i, name: nil, value: nil))

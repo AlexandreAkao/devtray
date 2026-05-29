@@ -1,12 +1,12 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public struct CronExpression: Equatable, Sendable {
-    public let minutes: Set<Int>       // 0–59
-    public let hours: Set<Int>         // 0–23
-    public let daysOfMonth: Set<Int>   // 1–31
-    public let months: Set<Int>        // 1–12
-    public let daysOfWeek: Set<Int>    // 0–6 (0 = Sunday)
+    public let minutes: Set<Int> // 0–59
+    public let hours: Set<Int> // 0–23
+    public let daysOfMonth: Set<Int> // 1–31
+    public let months: Set<Int> // 1–12
+    public let daysOfWeek: Set<Int> // 0–6 (0 = Sunday)
 }
 
 public enum CronEngine {
@@ -70,11 +70,11 @@ public enum CronEngine {
         // expressions (e.g. "0 0 30 2 *"); expressions that don't fire within a year preview nothing.
         let maxIterations = 366 * 24 * 60
 
-        while results.count < count && iterations < maxIterations {
+        while results.count < count, iterations < maxIterations {
             let c = cal.dateComponents([.minute, .hour, .day, .month, .weekday], from: t)
-            let weekday0 = (c.weekday! - 1)      // Calendar: 1 = Sunday → 0
+            let weekday0 = (c.weekday! - 1) // Calendar: 1 = Sunday → 0
             let dayOK: Bool
-            if domRestricted && dowRestricted { dayOK = e.daysOfMonth.contains(c.day!) || e.daysOfWeek.contains(weekday0) }
+            if domRestricted, dowRestricted { dayOK = e.daysOfMonth.contains(c.day!) || e.daysOfWeek.contains(weekday0) }
             else if domRestricted { dayOK = e.daysOfMonth.contains(c.day!) }
             else if dowRestricted { dayOK = e.daysOfWeek.contains(weekday0) }
             else { dayOK = true }

@@ -1,6 +1,6 @@
-import XCTest
 import DevTrayCore
 @testable import RegexToolKit
+import XCTest
 
 final class RegexEngineTests: XCTestCase {
     func test_findsAllMatches() {

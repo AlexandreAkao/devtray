@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 import TimestampToolKit
 
 public enum TimestampTool: Tool {

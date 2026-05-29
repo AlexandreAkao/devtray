@@ -1,6 +1,6 @@
+import DevTrayCore
 import Foundation
 import GRDB
-import DevTrayCore
 
 public final class SQLiteSnippetStore: SnippetStore, @unchecked Sendable {
     private let dbQueue: DatabaseQueue
@@ -44,7 +44,7 @@ public final class SQLiteSnippetStore: SnippetStore, @unchecked Sendable {
                 snippet.createdAt.timeIntervalSince1970,
                 snippet.updatedAt.timeIntervalSince1970,
                 snippet.useCount,
-                snippet.lastUsedAt?.timeIntervalSince1970
+                snippet.lastUsedAt?.timeIntervalSince1970,
             ])
         }
     }

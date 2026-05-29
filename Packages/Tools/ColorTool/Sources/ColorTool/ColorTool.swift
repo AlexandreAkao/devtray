@@ -1,6 +1,6 @@
-import SwiftUI
-import DevTrayCore
 import ColorToolKit
+import DevTrayCore
+import SwiftUI
 
 public enum ColorTool: Tool {
     public static let id: ToolID = "color"

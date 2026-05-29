@@ -1,6 +1,6 @@
-import XCTest
-@testable import HashToolKit
 import DevTrayCore
+@testable import HashToolKit
+import XCTest
 
 final class HashEngineTests: XCTestCase {
     // Known vectors for "hello"
@@ -67,6 +67,6 @@ final class HashEngineTests: XCTestCase {
     func test_md5_outputIsLowercaseHex() {
         guard case .success(let s) = HashEngine.md5("hello") else { XCTFail(); return }
         XCTAssertEqual(s, s.lowercased())
-        XCTAssertTrue(s.allSatisfy { $0.isHexDigit })
+        XCTAssertTrue(s.allSatisfy(\.isHexDigit))
     }
 }

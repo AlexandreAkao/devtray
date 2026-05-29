@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import JSONToolKit
+import SwiftUI
 
 public enum JSONTool: Tool {
     public static let id: ToolID = "json"

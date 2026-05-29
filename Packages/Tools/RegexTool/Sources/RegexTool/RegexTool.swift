@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public enum RegexTool: Tool {
     public static let id: ToolID = "regex"

@@ -6,7 +6,7 @@ public final class ToolRegistry: ObservableObject {
 
     public init() {}
 
-    public func register<T: Tool>(_ tool: T.Type) {
+    public func register(_ tool: (some Tool).Type) {
         let anyTool = AnyTool(tool)
         guard !tools.contains(where: { $0.id == anyTool.id }) else { return }
         tools.append(anyTool)

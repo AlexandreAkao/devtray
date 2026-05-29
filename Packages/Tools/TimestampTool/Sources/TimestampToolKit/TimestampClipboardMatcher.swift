@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum TimestampClipboardMatcher {
     private static let minSeconds: Int64 = 978_307_200

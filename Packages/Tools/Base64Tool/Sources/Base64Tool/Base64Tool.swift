@@ -1,6 +1,6 @@
-import SwiftUI
-import DevTrayCore
 import Base64ToolKit
+import DevTrayCore
+import SwiftUI
 
 public enum Base64Tool: Tool {
     public static let id: ToolID = "base64"

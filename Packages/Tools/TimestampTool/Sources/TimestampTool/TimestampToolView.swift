@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
+import SwiftUI
 import TimestampToolKit
 
 public struct TimestampToolView: View {
@@ -52,7 +52,6 @@ public struct TimestampToolView: View {
         _ = preloadBus.consume()
     }
 
-    @ViewBuilder
     private func labeledRow(_ label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)

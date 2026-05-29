@@ -1,7 +1,7 @@
-import XCTest
-@testable import DevTrayStorage
 import DevTrayCore
+@testable import DevTrayStorage
 import GRDB
+import XCTest
 
 final class SQLiteSnippetStoreTests: XCTestCase {
     private func makeStore() throws -> SQLiteSnippetStore {

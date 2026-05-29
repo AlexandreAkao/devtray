@@ -1,6 +1,6 @@
-import SwiftUI
 import Combine
 import DevTrayCore
+import SwiftUI
 
 @MainActor
 public final class SpotlightViewModel: ObservableObject {
@@ -61,8 +61,7 @@ public final class SpotlightViewModel: ObservableObject {
             }
             self.rows = rows
             if let first = rows.first,
-               !rows.contains(where: { $0.result.toolID == self.selectedID })
-            {
+               !rows.contains(where: { $0.result.toolID == self.selectedID }) {
                 self.selectedID = first.result.toolID
             }
         }

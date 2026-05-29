@@ -1,5 +1,5 @@
-import XCTest
 import DevTrayCore
+import XCTest
 
 final class InMemoryUsageStoreTests: XCTestCase {
     func test_record_thenTopTools_returnsOneRank() async throws {
@@ -13,9 +13,9 @@ final class InMemoryUsageStoreTests: XCTestCase {
     func test_topTools_multipleTools_ranksByCountDesc() async throws {
         let store = InMemoryUsageStore()
         let now = Date()
-        for _ in 0..<5 { await store.record(toolID: "jwt", at: now) }
-        for _ in 0..<3 { await store.record(toolID: "json", at: now) }
-        for _ in 0..<7 { await store.record(toolID: "hash", at: now) }
+        for _ in 0 ..< 5 { await store.record(toolID: "jwt", at: now) }
+        for _ in 0 ..< 3 { await store.record(toolID: "json", at: now) }
+        for _ in 0 ..< 7 { await store.record(toolID: "hash", at: now) }
 
         let ranks = try await store.topTools(window: .allTime, limit: 3, now: now)
         XCTAssertEqual(ranks.map(\.toolID.rawValue), ["hash", "jwt", "json"])

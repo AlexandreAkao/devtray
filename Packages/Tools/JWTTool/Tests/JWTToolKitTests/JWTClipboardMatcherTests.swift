@@ -1,6 +1,6 @@
-import XCTest
-@testable import JWTToolKit
 import DevTrayCore
+@testable import JWTToolKit
+import XCTest
 
 final class JWTClipboardMatcherTests: XCTestCase {
     func test_validJWT_returnsStrong() {

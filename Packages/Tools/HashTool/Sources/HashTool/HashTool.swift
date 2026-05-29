@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import HashToolKit
+import SwiftUI
 
 public enum HashTool: Tool {
     public static let id: ToolID = "hash"

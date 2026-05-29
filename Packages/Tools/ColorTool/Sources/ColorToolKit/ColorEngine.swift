@@ -1,11 +1,11 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public struct ColorValue: Equatable, Sendable {
-    public let r: Int       // 0–255
+    public let r: Int // 0–255
     public let g: Int
     public let b: Int
-    public let a: Double    // 0–1
+    public let a: Double // 0–1
     public init(r: Int, g: Int, b: Int, a: Double = 1) {
         self.r = r; self.g = g; self.b = b; self.a = a
     }
@@ -72,7 +72,7 @@ public enum ColorEngine {
 
     private static func numbers(in s: String) -> [Double] {
         guard let open = s.firstIndex(of: "("), let close = s.lastIndex(of: ")"), open < close else { return [] }
-        return s[s.index(after: open)..<close]
+        return s[s.index(after: open) ..< close]
             .split(separator: ",")
             .compactMap { Double($0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "%", with: "")) }
     }
@@ -98,12 +98,12 @@ public enum ColorEngine {
         let x = c * (1 - abs(hp.truncatingRemainder(dividingBy: 2) - 1))
         let (r1, g1, b1): (Double, Double, Double)
         switch hp {
-        case 0..<1: (r1, g1, b1) = (c, x, 0)
-        case 1..<2: (r1, g1, b1) = (x, c, 0)
-        case 2..<3: (r1, g1, b1) = (0, c, x)
-        case 3..<4: (r1, g1, b1) = (0, x, c)
-        case 4..<5: (r1, g1, b1) = (x, 0, c)
-        default:    (r1, g1, b1) = (c, 0, x)
+        case 0 ..< 1: (r1, g1, b1) = (c, x, 0)
+        case 1 ..< 2: (r1, g1, b1) = (x, c, 0)
+        case 2 ..< 3: (r1, g1, b1) = (0, c, x)
+        case 3 ..< 4: (r1, g1, b1) = (0, x, c)
+        case 4 ..< 5: (r1, g1, b1) = (x, 0, c)
+        default: (r1, g1, b1) = (c, 0, x)
         }
         let m = l - c / 2
         return (Int(((r1 + m) * 255).rounded()), Int(((g1 + m) * 255).rounded()), Int(((b1 + m) * 255).rounded()))

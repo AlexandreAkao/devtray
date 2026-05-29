@@ -1,6 +1,6 @@
-import XCTest
-import Foundation
 @testable import DevTrayCore
+import Foundation
+import XCTest
 
 final class SnippetArchiveTests: XCTestCase {
     private func sample(id: String = "s1") -> Snippet {

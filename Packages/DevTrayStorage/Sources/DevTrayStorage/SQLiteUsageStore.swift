@@ -1,6 +1,6 @@
+import DevTrayCore
 import Foundation
 import GRDB
-import DevTrayCore
 import os
 
 public final class SQLiteUsageStore: UsageStore, @unchecked Sendable {

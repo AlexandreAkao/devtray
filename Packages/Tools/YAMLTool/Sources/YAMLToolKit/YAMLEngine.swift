@@ -1,6 +1,6 @@
+import DevTrayCore
 import Foundation
 import Yams
-import DevTrayCore
 
 public enum YAMLEngine {
     public static func yamlToJSON(_ yaml: String) -> Result<String, ToolError> {
@@ -24,7 +24,7 @@ public enum YAMLEngine {
         do {
             let raw = try JSONSerialization.jsonObject(with: Data(json.utf8), options: [.fragmentsAllowed])
             let native = toNative(raw)
-            return .success(try Yams.dump(object: native))
+            return try .success(Yams.dump(object: native))
         } catch {
             return .failure(.parseFailure(reason: error.localizedDescription, hint: nil))
         }

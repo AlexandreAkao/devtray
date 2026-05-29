@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import DiffToolKit
+import SwiftUI
 
 public enum DiffTool: Tool {
     public static let id: ToolID = "diff"

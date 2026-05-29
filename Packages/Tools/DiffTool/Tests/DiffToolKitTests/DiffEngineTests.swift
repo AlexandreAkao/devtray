@@ -1,5 +1,5 @@
-import XCTest
 @testable import DiffToolKit
+import XCTest
 
 final class DiffEngineTests: XCTestCase {
     func test_identical_allEqual() {
@@ -49,6 +49,6 @@ final class DiffEngineTests: XCTestCase {
     func test_unifiedHunks_nearbyChangesMergeIntoOneHunk() {
         let a = "1\n2\n3\n4\n5"
         let b = "X\n2\n3\n4\nY"
-        XCTAssertEqual(DiffEngine.unifiedHunks(a, b).count, 1)   // default context 3 merges
+        XCTAssertEqual(DiffEngine.unifiedHunks(a, b).count, 1) // default context 3 merges
     }
 }

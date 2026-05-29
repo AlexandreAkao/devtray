@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class InMemorySnippetStoreTests: XCTestCase {
     private func snippet(_ id: String, _ title: String, content: String = "",

@@ -1,6 +1,6 @@
-import XCTest
 @testable import DevTrayStorage
 import GRDB
+import XCTest
 
 final class PackageSmokeTest: XCTestCase {
     func test_grdb_canOpenInMemoryQueue() throws {

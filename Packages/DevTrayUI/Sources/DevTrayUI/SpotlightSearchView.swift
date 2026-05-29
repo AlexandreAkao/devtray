@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct SpotlightSearchView: View {
     @StateObject private var viewModel: SpotlightViewModel
@@ -152,8 +152,7 @@ public struct SpotlightSearchView: View {
 
     private func handleReturn(withPreload: Bool) {
         if let id = viewModel.selectedID,
-           let row = viewModel.rows.first(where: { $0.result.toolID == id })
-        {
+           let row = viewModel.rows.first(where: { $0.result.toolID == id }) {
             // Still fire onSubmit so the controller can call preloadBus.send,
             // but switch to inline tool view instead of opening the popover.
             onSubmit(row.result, withPreload)

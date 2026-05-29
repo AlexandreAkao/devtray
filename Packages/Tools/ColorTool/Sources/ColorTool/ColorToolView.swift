@@ -1,8 +1,8 @@
-import SwiftUI
 import AppKit
+import ColorToolKit
 import DevTrayCore
 import DevTrayUI
-import ColorToolKit
+import SwiftUI
 
 public struct ColorToolView: View {
     @Environment(\.preloadBus) private var preloadBus: PreloadBus

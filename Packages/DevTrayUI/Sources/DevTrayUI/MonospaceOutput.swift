@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 public struct MonospaceOutput: View {
     private let text: String

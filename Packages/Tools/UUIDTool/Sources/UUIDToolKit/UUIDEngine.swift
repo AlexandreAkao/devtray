@@ -1,6 +1,6 @@
+import DevTrayCore
 import Foundation
 import Security
-import DevTrayCore
 
 public enum UUIDEngine {
     public static let minCount = 1
@@ -14,11 +14,11 @@ public enum UUIDEngine {
         }
         var out: [String] = []
         out.reserveCapacity(count)
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             switch format {
             case .uuidV4: out.append(generateV4())
             case .uuidV7: out.append(generateV7())
-            case .ulid:   out.append(generateULID())
+            case .ulid: out.append(generateULID())
             }
         }
         return .success(out)
@@ -72,7 +72,7 @@ public enum UUIDEngine {
 
         // Encode 48-bit timestamp into 10 Crockford chars (5 bits each, high → low)
         var ts = ""
-        for i in (0..<10).reversed() {
+        for i in (0 ..< 10).reversed() {
             let shift = i * 5
             let idx = Int((ms >> shift) & 0x1f)
             ts.append(crockford[idx])
@@ -81,7 +81,7 @@ public enum UUIDEngine {
         // Encode 80 random bits (10 bytes) into 16 Crockford chars (5 bits each).
         // Stream bytes through a small buffer, emit 5 bits at a time.
         var buffer: UInt64 = 0
-        var bufferBits: Int = 0
+        var bufferBits = 0
         var randChars: [Character] = []
         randChars.reserveCapacity(16)
         for byte in random {

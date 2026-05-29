@@ -1,6 +1,6 @@
 import Foundation
 
-internal enum Base64URL {
+enum Base64URL {
     static func decode(_ input: String) -> Data? {
         var s = input
             .replacingOccurrences(of: "-", with: "+")

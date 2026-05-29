@@ -1,7 +1,7 @@
-import XCTest
-@testable import DevTrayStorage
 import DevTrayCore
+@testable import DevTrayStorage
 import GRDB
+import XCTest
 
 final class SQLiteUsageStoreTests: XCTestCase {
     private func makeStore() throws -> SQLiteUsageStore {
@@ -26,7 +26,7 @@ final class SQLiteUsageStoreTests: XCTestCase {
     func test_record_sameToolMultipleTimes_appendsAllRows() async throws {
         let store = try makeStore()
         let now = Date()
-        for _ in 0..<5 { await store.record(toolID: "jwt", at: now) }
+        for _ in 0 ..< 5 { await store.record(toolID: "jwt", at: now) }
         let rows = try await store.debugDumpAllRows()
         XCTAssertEqual(rows.count, 5)
     }
@@ -40,7 +40,7 @@ final class SQLiteUsageStoreTests: XCTestCase {
     func test_topTools_singleTool_returnsOneRank() async throws {
         let store = try makeStore()
         let now = Date()
-        for _ in 0..<3 { await store.record(toolID: "jwt", at: now) }
+        for _ in 0 ..< 3 { await store.record(toolID: "jwt", at: now) }
         let ranks = try await store.topTools(window: .allTime, limit: 3, now: now)
         XCTAssertEqual(ranks, [ToolUsageRank(toolID: "jwt", count: 3)])
     }
@@ -48,9 +48,9 @@ final class SQLiteUsageStoreTests: XCTestCase {
     func test_topTools_multipleTools_ranksByCountDesc() async throws {
         let store = try makeStore()
         let now = Date()
-        for _ in 0..<5 { await store.record(toolID: "jwt", at: now) }
-        for _ in 0..<3 { await store.record(toolID: "json", at: now) }
-        for _ in 0..<7 { await store.record(toolID: "hash", at: now) }
+        for _ in 0 ..< 5 { await store.record(toolID: "jwt", at: now) }
+        for _ in 0 ..< 3 { await store.record(toolID: "json", at: now) }
+        for _ in 0 ..< 7 { await store.record(toolID: "hash", at: now) }
 
         let ranks = try await store.topTools(window: .allTime, limit: 3, now: now)
         XCTAssertEqual(ranks.map(\.toolID.rawValue), ["hash", "jwt", "json"])
@@ -101,8 +101,8 @@ final class SQLiteUsageStoreTests: XCTestCase {
         let store = try makeStore()
         let now = Date()
         let old = now.addingTimeInterval(-100 * 86_400)
-        for _ in 0..<3 { await store.record(toolID: "jwt", at: now) }   // in-window
-        for _ in 0..<5 { await store.record(toolID: "jwt", at: old) }   // all-time
+        for _ in 0 ..< 3 { await store.record(toolID: "jwt", at: now) } // in-window
+        for _ in 0 ..< 5 { await store.record(toolID: "jwt", at: old) } // all-time
 
         let ranks = try await store.topTools(window: .lastDays(30), limit: 3, now: now)
         XCTAssertEqual(ranks.count, 1)
@@ -114,7 +114,7 @@ final class SQLiteUsageStoreTests: XCTestCase {
         let store = try makeStore()
         let now = Date()
         await withTaskGroup(of: Void.self) { group in
-            for _ in 0..<100 {
+            for _ in 0 ..< 100 {
                 group.addTask { await store.record(toolID: "jwt", at: now) }
             }
         }

@@ -1,6 +1,6 @@
-import XCTest
-import SwiftUI
 import DevTrayCore
+import SwiftUI
+import XCTest
 
 private enum StubTool: Tool {
     static let id: ToolID = "stub"

@@ -1,6 +1,6 @@
-import XCTest
-import DevTrayCore
 @testable import ColorToolKit
+import DevTrayCore
+import XCTest
 
 final class ColorEngineTests: XCTestCase {
     private func value(_ input: String) -> ColorValue? {

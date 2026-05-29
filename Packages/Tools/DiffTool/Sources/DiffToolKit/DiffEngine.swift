@@ -30,7 +30,7 @@ public enum DiffEngine {
 
         // LCS length table, sized (n+1) x (m+1), filled bottom-up.
         var dp = Array(repeating: Array(repeating: 0, count: m + 1), count: n + 1)
-        if n > 0 && m > 0 {
+        if n > 0, m > 0 {
             for i in stride(from: n - 1, through: 0, by: -1) {
                 for j in stride(from: m - 1, through: 0, by: -1) {
                     dp[i][j] = left[i] == right[j] ? dp[i + 1][j + 1] + 1 : max(dp[i + 1][j], dp[i][j + 1])
@@ -40,7 +40,7 @@ public enum DiffEngine {
 
         var rows: [DiffRow] = []
         var i = 0, j = 0, leftNo = 1, rightNo = 1
-        while i < n && j < m {
+        while i < n, j < m {
             if left[i] == right[j] {
                 rows.append(DiffRow(kind: .equal, text: left[i], leftLine: leftNo, rightLine: rightNo))
                 i += 1; j += 1; leftNo += 1; rightNo += 1
@@ -65,7 +65,7 @@ public enum DiffEngine {
         var hunks: [DiffHunk] = []
         var start = max(0, changed[0] - context)
         var end = min(rows.count - 1, changed[0] + context)
-        for k in 1..<changed.count {
+        for k in 1 ..< changed.count {
             let idx = changed[k]
             if idx - context <= end + 1 {
                 end = min(rows.count - 1, idx + context)
@@ -80,7 +80,7 @@ public enum DiffEngine {
     }
 
     private static func makeHunk(_ rows: [DiffRow], _ start: Int, _ end: Int) -> DiffHunk {
-        let slice = Array(rows[start...end])
+        let slice = Array(rows[start ... end])
         let leftStart = slice.compactMap(\.leftLine).first ?? 0
         let rightStart = slice.compactMap(\.rightLine).first ?? 0
         let leftCount = slice.filter { $0.leftLine != nil }.count
@@ -91,7 +91,7 @@ public enum DiffEngine {
     private static func splitLines(_ s: String) -> [String] {
         guard !s.isEmpty else { return [] }
         var parts = s.components(separatedBy: "\n")
-        if parts.last == "" { parts.removeLast() }   // drop the empty token a terminal newline produces
+        if parts.last == "" { parts.removeLast() } // drop the empty token a terminal newline produces
         return parts
     }
 }

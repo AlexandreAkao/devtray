@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
+import SwiftUI
 
 struct SnippetEditorView: View {
     @Bindable var model: SnippetsModel

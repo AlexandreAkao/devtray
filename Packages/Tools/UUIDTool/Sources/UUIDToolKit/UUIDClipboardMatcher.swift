@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum UUIDClipboardMatcher {
     private static let uuid = try! NSRegularExpression(
@@ -13,8 +13,7 @@ public enum UUIDClipboardMatcher {
         let trimmed = clipboard.trimmingCharacters(in: .whitespacesAndNewlines)
         let range = NSRange(trimmed.startIndex..., in: trimmed)
         if uuid.firstMatch(in: trimmed, range: range) != nil
-            || ulid.firstMatch(in: trimmed, range: range) != nil
-        {
+            || ulid.firstMatch(in: trimmed, range: range) != nil {
             return ClipboardMatchScore(.strong)
         }
         return nil

@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 struct FrequentToolChip: View {
     let tool: AnyTool

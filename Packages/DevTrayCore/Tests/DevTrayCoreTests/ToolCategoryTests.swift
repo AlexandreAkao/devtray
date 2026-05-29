@@ -1,5 +1,5 @@
-import XCTest
 import DevTrayCore
+import XCTest
 
 final class ToolCategoryTests: XCTestCase {
     func test_allCases_includesGenerators() {

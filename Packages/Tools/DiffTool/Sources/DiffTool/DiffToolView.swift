@@ -1,7 +1,7 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
 import DiffToolKit
+import SwiftUI
 
 public struct DiffToolView: View {
     enum ViewMode: String, CaseIterable, Identifiable {

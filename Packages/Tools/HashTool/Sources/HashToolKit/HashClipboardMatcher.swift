@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum HashClipboardMatcher {
     private static let validLengths: Set<Int> = [32, 40, 64, 128]

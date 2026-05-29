@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 import YAMLToolKit
 
 public enum YAMLTool: Tool {

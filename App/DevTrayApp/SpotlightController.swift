@@ -1,8 +1,8 @@
 import AppKit
-import SwiftUI
-import os
 import DevTrayCore
 import DevTrayUI
+import os
+import SwiftUI
 
 @MainActor
 final class SpotlightController {
@@ -122,5 +122,4 @@ final class SpotlightController {
         preloadBus.send(PreloadPayload(toolID: result.toolID, text: text))
         // Plan B: panel hosts the tool view inline; do not close + open popover.
     }
-
 }

@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 import URLToolKit
 
 public enum URLTool: Tool {

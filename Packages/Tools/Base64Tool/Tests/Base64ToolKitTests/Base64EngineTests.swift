@@ -1,5 +1,5 @@
-import XCTest
 @testable import Base64ToolKit
+import XCTest
 
 final class Base64EngineTests: XCTestCase {
     func test_encode_asciiText_returnsBase64() {

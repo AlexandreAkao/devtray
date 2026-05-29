@@ -1,8 +1,8 @@
-import XCTest
 @testable import JSONToolKit
+import XCTest
 
 final class JSONEngineTests: XCTestCase {
-    func test_format_validJSON_returnsPretty() throws {
+    func test_format_validJSON_returnsPretty() {
         let input = "{\"a\":1,\"b\":2}"
         let result = JSONEngine.format(input)
         guard case .success(let pretty) = result else {
@@ -12,7 +12,7 @@ final class JSONEngineTests: XCTestCase {
         XCTAssertTrue(pretty.contains("  \"a\""))
     }
 
-    func test_format_sortsKeys() throws {
+    func test_format_sortsKeys() {
         let input = "{\"b\":1,\"a\":2}"
         let result = JSONEngine.format(input)
         guard case .success(let pretty) = result else {
@@ -35,7 +35,7 @@ final class JSONEngineTests: XCTestCase {
         XCTFail("expected invalidInput")
     }
 
-    func test_minify_validJSON_removesWhitespace() throws {
+    func test_minify_validJSON_removesWhitespace() {
         let input = "{\n  \"a\": 1\n}"
         let result = JSONEngine.minify(input)
         guard case .success(let min) = result else { XCTFail(); return }

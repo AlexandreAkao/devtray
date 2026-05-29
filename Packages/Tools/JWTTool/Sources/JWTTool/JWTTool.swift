@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import JWTToolKit
+import SwiftUI
 
 public enum JWTTool: Tool {
     public static let id: ToolID = "jwt"

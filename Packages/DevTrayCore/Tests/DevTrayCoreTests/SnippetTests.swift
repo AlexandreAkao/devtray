@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class SnippetTests: XCTestCase {
     func test_init_appliesDefaults() {

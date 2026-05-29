@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class PreloadBusTests: XCTestCase {
     func test_initialState_pendingIsNil() {

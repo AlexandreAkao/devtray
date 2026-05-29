@@ -1,8 +1,8 @@
 import AppKit
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
 import HashToolKit
+import SwiftUI
 
 public struct HashToolView: View {
     @Environment(\.preloadBus) private var preloadBus: PreloadBus
@@ -56,7 +56,6 @@ public struct HashToolView: View {
         _ = preloadBus.consume()
     }
 
-    @ViewBuilder
     private func labeledRow(_ label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)

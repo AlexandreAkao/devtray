@@ -1,10 +1,9 @@
-import XCTest
-import SwiftUI
 @testable import DevTrayCore
+import SwiftUI
+import XCTest
 
 @MainActor
 final class SpotlightRankerTests: XCTestCase {
-
     // MARK: - Test fixtures
 
     private enum FixtureKind { case jwtLike, urlLike, plain }
@@ -76,8 +75,8 @@ final class SpotlightRankerTests: XCTestCase {
         let ranker = SpotlightRanker(registry: makeRegistry(), usage: usage)
         let results = await ranker.rank(query: "", clipboard: nil, limit: 8)
         XCTAssertEqual(results.first?.toolID, "json")
-        XCTAssertFalse(results.allSatisfy { $0.fromClipboard })
-        XCTAssertFalse(results.contains(where: { $0.fromClipboard }))
+        XCTAssertFalse(results.allSatisfy(\.fromClipboard))
+        XCTAssertFalse(results.contains(where: \.fromClipboard))
     }
 
     func test_emptyQuery_strongClipboardMatch_putsMatchOnTopWithPill() async {
@@ -88,7 +87,7 @@ final class SpotlightRankerTests: XCTestCase {
         let results = await ranker.rank(query: "", clipboard: "eyJhbGc.x.y", limit: 8)
         XCTAssertEqual(results.first?.toolID, "jwt")
         XCTAssertTrue(results.first?.fromClipboard ?? false)
-        XCTAssertEqual(results.dropFirst().filter { $0.fromClipboard }.count, 0)
+        XCTAssertEqual(results.dropFirst().filter(\.fromClipboard).count, 0)
     }
 
     func test_emptyQuery_strongBeatsWeak() async {
@@ -127,7 +126,7 @@ final class SpotlightRankerTests: XCTestCase {
         // only the URL tool's matcher would recognize — but URL is not in the
         // fuzzy-filtered rows, so no badge appears anywhere in the result.
         let results = await ranker.rank(query: "j", clipboard: "https://x.example", limit: 8)
-        XCTAssertFalse(results.contains(where: { $0.fromClipboard }))
+        XCTAssertFalse(results.contains(where: \.fromClipboard))
     }
 
     func test_query_withClipboardThatMatchesAMatchingRow_setsBadgeOnIt() async {

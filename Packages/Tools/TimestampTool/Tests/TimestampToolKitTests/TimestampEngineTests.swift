@@ -1,6 +1,6 @@
-import XCTest
-@testable import TimestampToolKit
 import DevTrayCore
+@testable import TimestampToolKit
+import XCTest
 
 final class TimestampEngineTests: XCTestCase {
     // MARK: - Numeric parsing

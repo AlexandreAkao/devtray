@@ -1,6 +1,6 @@
-import XCTest
-import SwiftUI
 @testable import DevTrayCore
+import SwiftUI
+import XCTest
 
 final class ClipboardMatchScoreTests: XCTestCase {
     func test_confidenceOrdering_weakLessThanStrong() {

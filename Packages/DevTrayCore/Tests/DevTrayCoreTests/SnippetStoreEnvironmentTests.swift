@@ -1,6 +1,6 @@
-import XCTest
-import SwiftUI
 @testable import DevTrayCore
+import SwiftUI
+import XCTest
 
 final class SnippetStoreEnvironmentTests: XCTestCase {
     func test_default_isUsableEmptyStore() async throws {

@@ -9,7 +9,7 @@ public enum IDFormat: String, CaseIterable, Sendable, Identifiable {
         switch self {
         case .uuidV4: return "UUID v4"
         case .uuidV7: return "UUID v7"
-        case .ulid:   return "ULID"
+        case .ulid: return "ULID"
         }
     }
 }

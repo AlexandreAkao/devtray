@@ -1,5 +1,5 @@
-import XCTest
 import DevTrayCore
+import XCTest
 @testable import YAMLToolKit
 
 final class YAMLEngineTests: XCTestCase {
@@ -55,7 +55,7 @@ final class YAMLEngineTests: XCTestCase {
         // A date scalar must NOT produce a cryptic ObjC error.
         switch YAMLEngine.yamlToJSON("created: 2023-01-15") {
         case .success(let json):
-            XCTAssertTrue(json.contains("2023-01-15"))   // resolver approach: date kept as a string
+            XCTAssertTrue(json.contains("2023-01-15")) // resolver approach: date kept as a string
         case .failure(let error):
             guard case ToolError.parseFailure(let reason, _) = error else { return XCTFail("expected parseFailure") }
             XCTAssertFalse(reason.contains("__NS"), "error message must be human-readable, not a raw ObjC type")
@@ -66,7 +66,7 @@ final class YAMLEngineTests: XCTestCase {
         guard case .success(let yaml) = YAMLEngine.jsonToYAML("{\"flag\": true, \"n\": null}") else {
             return XCTFail("expected success")
         }
-        XCTAssertTrue(yaml.contains("flag: true"))   // must be Bool true, not integer 1
+        XCTAssertTrue(yaml.contains("flag: true")) // must be Bool true, not integer 1
         XCTAssertTrue(yaml.contains("n: null"))
     }
 }

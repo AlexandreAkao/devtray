@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct PopoverRoot: View {
     @EnvironmentObject private var registry: ToolRegistry
@@ -108,7 +108,7 @@ public struct PopoverRoot: View {
             .onTapGesture { selectedToolID = tool.id }
     }
 
-    // Hidden buttons binding Cmd+1…9 to the first nine visible tools.
+    /// Hidden buttons binding Cmd+1…9 to the first nine visible tools.
     private var cmdNumberShortcuts: some View {
         ForEach(Array(visibleTools.prefix(9).enumerated()), id: \.element.id) { idx, tool in
             Button("") { selectedToolID = tool.id }
@@ -160,13 +160,13 @@ public struct PopoverRoot: View {
         .frame(height: 32)
     }
 
-    // Flat list honoring search + enabled state (used for selection + Cmd+1…9).
+    /// Flat list honoring search + enabled state (used for selection + Cmd+1…9).
     private var visibleTools: [AnyTool] {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return toolPreferences.enabled(registry.search(q))
     }
 
-    // Grouped by category for the no-search sidebar.
+    /// Grouped by category for the no-search sidebar.
     private var groupedTools: [(category: ToolCategory, tools: [AnyTool])] {
         let visible = visibleTools
         return ToolCategory.allCases.compactMap { cat in

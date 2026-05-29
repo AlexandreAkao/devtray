@@ -10,7 +10,7 @@ public struct AnyTool: Identifiable, Hashable, Sendable {
     private let _makeView: @MainActor @Sendable () -> AnyView
     private let _clipboardMatch: @Sendable (String) -> ClipboardMatchScore?
 
-    public init<T: Tool>(_ tool: T.Type) {
+    public init<T: Tool>(_: T.Type) {
         self.id = T.id
         self.displayName = T.displayName
         self.iconName = T.iconName

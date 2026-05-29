@@ -1,5 +1,5 @@
-import XCTest
 import DevTrayCore
+import XCTest
 
 final class ToolErrorTests: XCTestCase {
     func test_parseFailure_hasLocalizedDescription() {

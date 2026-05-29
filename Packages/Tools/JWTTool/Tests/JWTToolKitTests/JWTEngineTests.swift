@@ -1,10 +1,10 @@
-import XCTest
 @testable import JWTToolKit
+import XCTest
 
 final class JWTEngineTests: XCTestCase {
     private let validJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
-    func test_decode_validJWT_returnsDecoded() throws {
+    func test_decode_validJWT_returnsDecoded() {
         let result = JWTEngine.decode(validJWT)
         guard case .success(let decoded) = result else {
             XCTFail("expected success, got \(result)"); return
@@ -46,7 +46,7 @@ final class JWTEngineTests: XCTestCase {
 
 private extension Data {
     func base64URLEncoded() -> String {
-        return self.base64EncodedString()
+        self.base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")

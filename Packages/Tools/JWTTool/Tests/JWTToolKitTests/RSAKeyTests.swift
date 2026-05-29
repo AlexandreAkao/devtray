@@ -1,5 +1,5 @@
-import XCTest
 @testable import JWTToolKit
+import XCTest
 
 final class RSAKeyTests: XCTestCase {
     let privatePEM = """

@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum Base64ClipboardMatcher {
     public static func match(_ clipboard: String) -> ClipboardMatchScore? {

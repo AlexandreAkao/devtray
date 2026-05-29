@@ -1,6 +1,6 @@
-import Foundation
 import CryptoKit
 import DevTrayCore
+import Foundation
 
 public enum JWTEngine {
     public static func decode(_ raw: String) -> Result<DecodedJWT, ToolError> {

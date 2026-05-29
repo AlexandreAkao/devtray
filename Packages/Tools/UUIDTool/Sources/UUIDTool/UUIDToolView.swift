@@ -1,7 +1,7 @@
-import SwiftUI
 import AppKit
 import DevTrayCore
 import DevTrayUI
+import SwiftUI
 import UUIDToolKit
 
 public struct UUIDToolView: View {
@@ -22,7 +22,7 @@ public struct UUIDToolView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
 
-                Stepper(value: $count, in: UUIDEngine.minCount...UUIDEngine.maxCount) {
+                Stepper(value: $count, in: UUIDEngine.minCount ... UUIDEngine.maxCount) {
                     Text("Count: \(count)")
                         .monospacedDigit()
                 }

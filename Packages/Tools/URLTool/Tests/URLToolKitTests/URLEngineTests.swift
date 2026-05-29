@@ -1,6 +1,6 @@
-import XCTest
-@testable import URLToolKit
 import DevTrayCore
+@testable import URLToolKit
+import XCTest
 
 final class URLEngineTests: XCTestCase {
     // Encode

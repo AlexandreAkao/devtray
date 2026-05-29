@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum JSONEngine {
     public static func format(_ raw: String) -> Result<String, ToolError> {

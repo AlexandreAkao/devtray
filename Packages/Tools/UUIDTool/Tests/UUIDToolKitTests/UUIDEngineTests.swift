@@ -1,6 +1,6 @@
-import XCTest
-@testable import UUIDToolKit
 import DevTrayCore
+@testable import UUIDToolKit
+import XCTest
 
 final class UUIDEngineTests: XCTestCase {
     // MARK: - IDFormat

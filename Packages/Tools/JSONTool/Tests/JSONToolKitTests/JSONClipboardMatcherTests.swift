@@ -1,6 +1,6 @@
-import XCTest
-@testable import JSONToolKit
 import DevTrayCore
+@testable import JSONToolKit
+import XCTest
 
 final class JSONClipboardMatcherTests: XCTestCase {
     func test_objectShape_returnsStrong() {

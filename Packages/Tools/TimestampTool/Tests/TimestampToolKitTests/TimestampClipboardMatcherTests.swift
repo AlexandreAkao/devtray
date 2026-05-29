@@ -1,6 +1,6 @@
-import XCTest
-@testable import TimestampToolKit
 import DevTrayCore
+@testable import TimestampToolKit
+import XCTest
 
 final class TimestampClipboardMatcherTests: XCTestCase {
     func test_unixSeconds_returnsWeak() {

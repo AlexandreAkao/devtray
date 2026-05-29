@@ -1,6 +1,6 @@
-import XCTest
-import DevTrayCore
 @testable import CronToolKit
+import DevTrayCore
+import XCTest
 
 final class CronEngineTests: XCTestCase {
     private func parsed(_ expr: String) -> CronExpression? {

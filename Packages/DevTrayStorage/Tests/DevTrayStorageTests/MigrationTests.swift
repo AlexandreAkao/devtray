@@ -1,6 +1,6 @@
-import XCTest
 @testable import DevTrayStorage
 import GRDB
+import XCTest
 
 final class MigrationTests: XCTestCase {
     private func makeMigratedQueue() throws -> DatabaseQueue {
@@ -50,7 +50,7 @@ final class MigrationTests: XCTestCase {
         let names = columns.map { $0["name"] as String }
         XCTAssertEqual(names, [
             "id", "title", "content", "language", "tags",
-            "is_favorite", "created_at", "updated_at", "use_count", "last_used_at"
+            "is_favorite", "created_at", "updated_at", "use_count", "last_used_at",
         ])
     }
 

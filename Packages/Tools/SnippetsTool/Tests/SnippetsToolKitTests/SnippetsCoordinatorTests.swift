@@ -1,6 +1,6 @@
-import XCTest
 import DevTrayCore
 @testable import SnippetsToolKit
+import XCTest
 
 final class SnippetsCoordinatorTests: XCTestCase {
     private func makeCoordinator() -> SnippetsCoordinator {

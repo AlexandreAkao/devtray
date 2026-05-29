@@ -1,7 +1,7 @@
-import SwiftUI
 import AppKit
 import DevTrayCore
 import SnippetsToolKit
+import SwiftUI
 
 @MainActor
 @Observable

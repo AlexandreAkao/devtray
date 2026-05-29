@@ -1,8 +1,8 @@
 import AppKit
-import SwiftUI
+import Base64ToolKit
 import DevTrayCore
 import DevTrayUI
-import Base64ToolKit
+import SwiftUI
 
 public struct Base64ToolView: View {
     enum Mode: String, CaseIterable, Identifiable {

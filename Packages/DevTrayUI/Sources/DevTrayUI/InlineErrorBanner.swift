@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct InlineErrorBanner: View {
     public let error: ToolError

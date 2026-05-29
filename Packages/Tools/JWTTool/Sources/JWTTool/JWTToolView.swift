@@ -1,7 +1,7 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
 import JWTToolKit
+import SwiftUI
 
 public struct JWTToolView: View {
     @Environment(\.preloadBus) private var preloadBus: PreloadBus

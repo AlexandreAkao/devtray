@@ -1,6 +1,6 @@
-import SwiftUI
-import DevTrayCore
 import CronToolKit
+import DevTrayCore
+import SwiftUI
 
 public enum CronTool: Tool {
     public static let id: ToolID = "cron"

@@ -36,7 +36,7 @@ public final class SpotlightRanker {
 
         if let top = await pickTopMatcher(matchers, now: now) {
             let restLimit = max(0, limit - 1)
-            let rest = (try? await usage.topTools(window: .lastDays(7), limit: restLimit, now: now))
+            let rest = await (try? usage.topTools(window: .lastDays(7), limit: restLimit, now: now))
                 ?? []
             let restResults = rest
                 .filter { $0.toolID != top.id }
@@ -46,7 +46,7 @@ public final class SpotlightRanker {
             )
         }
 
-        let ranks = (try? await usage.topTools(window: .lastDays(7), limit: limit, now: now)) ?? []
+        let ranks = await (try? usage.topTools(window: .lastDays(7), limit: limit, now: now)) ?? []
         return ranks.map { SpotlightResult(toolID: $0.toolID, fromClipboard: false) }
     }
 
@@ -106,7 +106,7 @@ public final class SpotlightRanker {
     // MARK: - Helpers
 
     private func usageRankMap(window: UsageWindow, now: Date) async -> [ToolID: Int] {
-        let ranks = (try? await usage.topTools(window: window, limit: 100, now: now)) ?? []
+        let ranks = await (try? usage.topTools(window: window, limit: 100, now: now)) ?? []
         var map: [ToolID: Int] = [:]
         for (index, rank) in ranks.enumerated() {
             map[rank.toolID] = index

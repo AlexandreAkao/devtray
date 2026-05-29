@@ -1,0 +1,5 @@
+--swiftversion 5.10
+--indent 4
+--maxwidth none
+--exclude build,.build,DevTray.xcodeproj
+--disable hoistPatternLet,conditionalAssignment,wrapFunctionBodies,wrapLoopBodies,wrapPropertyBodies,wrapArguments,wrapMultilineStatementBraces,noForceUnwrapInTests,numberFormatting,redundantSelf

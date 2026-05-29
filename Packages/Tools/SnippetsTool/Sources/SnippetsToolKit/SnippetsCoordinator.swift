@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 /// UI-agnostic orchestration over a `SnippetStore`. Owns the rules for assigning
 /// ids/timestamps and toggling favorites, so the view model stays thin and these

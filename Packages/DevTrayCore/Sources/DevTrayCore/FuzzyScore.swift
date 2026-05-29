@@ -7,7 +7,7 @@
 /// - If displayName does not match, each keyword is tried; the highest match
 ///   scores 50 (no prefix bonus). Keyword matches always rank below displayName
 ///   matches.
-internal func fuzzyScore(query: String, displayName: String, keywords: [String]) -> Int? {
+func fuzzyScore(query: String, displayName: String, keywords: [String]) -> Int? {
     let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     guard !q.isEmpty else { return nil }
 

@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum TimestampEngine {
     public static func parse(_ raw: String) -> Result<TimestampBreakdown, ToolError> {
@@ -32,8 +32,7 @@ public enum TimestampEngine {
 
         // ISO 8601 path
         if let date = isoParse(trimmed, fractional: false)
-            ?? isoParse(trimmed, fractional: true)
-        {
+            ?? isoParse(trimmed, fractional: true) {
             let ms = Int64((date.timeIntervalSince1970 * 1000).rounded())
             return .success(breakdown(milliseconds: ms))
         }

@@ -1,5 +1,5 @@
-import Foundation
 import DevTrayCore
+import Foundation
 
 public enum Base64Engine {
     public static func encode(_ raw: String) -> Result<String, ToolError> {

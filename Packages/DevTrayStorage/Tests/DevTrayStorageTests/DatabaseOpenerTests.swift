@@ -1,6 +1,6 @@
-import XCTest
 @testable import DevTrayStorage
 import GRDB
+import XCTest
 
 final class DatabaseOpenerTests: XCTestCase {
     private var sandbox: URL!

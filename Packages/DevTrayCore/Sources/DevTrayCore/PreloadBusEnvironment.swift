@@ -1,7 +1,7 @@
 import SwiftUI
 
 private struct PreloadBusEnvironmentKey: EnvironmentKey {
-    static let defaultValue: PreloadBus = PreloadBus()
+    static let defaultValue: PreloadBus = .init()
 }
 
 public extension EnvironmentValues {

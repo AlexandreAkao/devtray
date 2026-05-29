@@ -1,6 +1,6 @@
-import XCTest
 @testable import Base64ToolKit
 import DevTrayCore
+import XCTest
 
 final class Base64ClipboardMatcherTests: XCTestCase {
     func test_validBase64NoPadding_returnsWeak() {

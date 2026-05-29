@@ -1,23 +1,23 @@
-import SwiftUI
 import AppKit
-import UniformTypeIdentifiers
-import os
-import KeyboardShortcuts
-import DevTrayCore
-import DevTrayUI
-import DevTrayStorage
-import JWTTool
-import JSONTool
 import Base64Tool
-import URLTool
-import HashTool
-import UUIDTool
-import TimestampTool
-import SnippetsTool
-import RegexTool
-import DiffTool
 import ColorTool
 import CronTool
+import DevTrayCore
+import DevTrayStorage
+import DevTrayUI
+import DiffTool
+import HashTool
+import JSONTool
+import JWTTool
+import KeyboardShortcuts
+import os
+import RegexTool
+import SnippetsTool
+import SwiftUI
+import TimestampTool
+import UniformTypeIdentifiers
+import URLTool
+import UUIDTool
 import YAMLTool
 
 @main
@@ -56,11 +56,11 @@ struct DevTrayApp: App {
                 onCheckForUpdates: { updater.checkForUpdates() },
                 canCheckForUpdates: updater.canCheckForUpdates
             )
-                .environmentObject(registry)
-                .environmentObject(toolPreferences)
-                .environment(\.usageStore, usageStore)
-                .environment(\.snippetStore, snippetStore)
-                .environment(\.preloadBus, preloadBus)
+            .environmentObject(registry)
+            .environmentObject(toolPreferences)
+            .environment(\.usageStore, usageStore)
+            .environment(\.snippetStore, snippetStore)
+            .environment(\.preloadBus, preloadBus)
         }
         .menuBarExtraStyle(.window)
 

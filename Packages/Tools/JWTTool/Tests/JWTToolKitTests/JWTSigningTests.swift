@@ -1,6 +1,6 @@
-import XCTest
-@testable import JWTToolKit
 import DevTrayCore
+@testable import JWTToolKit
+import XCTest
 
 final class JWTSigningTests: XCTestCase {
     // Known HS256 token (jwt.io example), secret "your-256-bit-secret".
@@ -11,10 +11,12 @@ final class JWTSigningTests: XCTestCase {
         let r = JWTEngine.verify(token: hsToken, algorithm: .hs256, key: hsSecret)
         XCTAssertEqual(try? r.get(), true)
     }
+
     func test_hs256_verify_wrongSecret() {
         let r = JWTEngine.verify(token: hsToken, algorithm: .hs256, key: "wrong")
         XCTAssertEqual(try? r.get(), false)
     }
+
     func test_hs256_encode_then_verify_roundTrip() {
         let header = #"{"alg":"HS256","typ":"JWT"}"#
         let claims = #"{"sub":"42","name":"Ada"}"#
@@ -30,6 +32,7 @@ final class JWTSigningTests: XCTestCase {
         XCTAssertTrue(back.payloadJSON.contains("\"sub\" : \"42\""))
         XCTAssertTrue(back.payloadJSON.contains("\"name\" : \"Ada\""))
     }
+
     func test_encode_invalidClaimsJSON_fails() {
         if case .success = JWTEngine.encode(
             headerJSON: "{}", claimsJSON: "not json", algorithm: .hs256, key: "k") {

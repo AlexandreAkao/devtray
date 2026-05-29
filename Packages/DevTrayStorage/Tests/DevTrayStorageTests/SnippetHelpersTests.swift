@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayStorage
+import XCTest
 
 final class SnippetHelpersTests: XCTestCase {
     func test_tagCodec_roundTrips() {

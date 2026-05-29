@@ -1,7 +1,7 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
 import JSONToolKit
+import SwiftUI
 
 public struct JSONToolView: View {
     enum Mode: String, CaseIterable, Identifiable {

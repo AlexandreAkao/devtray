@@ -21,12 +21,12 @@ public final class SpotlightPanel: NSPanel {
         animationBehavior = .utilityWindow
     }
 
-    public override var canBecomeKey: Bool { true }
-    public override var canBecomeMain: Bool { false }
+    override public var canBecomeKey: Bool { true }
+    override public var canBecomeMain: Bool { false }
 
     public var onCancel: (() -> Void)?
 
-    public override func cancelOperation(_ sender: Any?) {
+    override public func cancelOperation(_: Any?) {
         onCancel?()
     }
 }

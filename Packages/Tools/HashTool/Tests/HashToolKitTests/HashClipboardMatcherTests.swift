@@ -1,6 +1,6 @@
-import XCTest
-@testable import HashToolKit
 import DevTrayCore
+@testable import HashToolKit
+import XCTest
 
 final class HashClipboardMatcherTests: XCTestCase {
     func test_md5Hex_returnsWeak() {

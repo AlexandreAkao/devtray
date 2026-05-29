@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class FuzzyScoreTests: XCTestCase {
     func test_exactPrefix_scoresHigherThanInfixSubsequence() {

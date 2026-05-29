@@ -1,7 +1,7 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
 import RegexToolKit
+import SwiftUI
 
 public struct RegexToolView: View {
     @State private var pattern = ""
@@ -14,8 +14,8 @@ public struct RegexToolView: View {
     @State private var replaced = ""
     @State private var error: ToolError?
 
-    // preloadBus/smart-paste integration is intentionally omitted: regex has no clipboardMatch
-    // matcher. Add preloadBus support here if a matcher is introduced.
+    /// preloadBus/smart-paste integration is intentionally omitted: regex has no clipboardMatch
+    /// matcher. Add preloadBus support here if a matcher is introduced.
     public init() {}
 
     private var flags: RegexFlags {

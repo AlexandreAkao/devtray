@@ -1,6 +1,6 @@
+import DevTrayCore
 import Foundation
 import Security
-import DevTrayCore
 
 enum RSAKey {
     static func verify(signingInput: Data, signature: Data, pemPublicKey: String) -> Result<Bool, ToolError> {
@@ -38,7 +38,7 @@ enum RSAKey {
         let body = pem
             .components(separatedBy: "\n")
             .filter { !$0.hasPrefix("-----") }
-            .map { $0.trimmingCharacters(in: .whitespaces) }  // strips \r and stray spaces per line
+            .map { $0.trimmingCharacters(in: .whitespaces) } // strips \r and stray spaces per line
             .joined()
         guard !body.isEmpty, let der = Data(base64Encoded: body) else {
             return .failure(.invalidInput(reason: "Key is not valid PEM/base64"))

@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class AppMetadataTests: XCTestCase {
     func test_version_returnsNonEmptyString() {

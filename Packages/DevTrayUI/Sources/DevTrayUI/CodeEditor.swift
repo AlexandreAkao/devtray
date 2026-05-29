@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 public struct CodeEditor: View {
     @Binding private var text: String
@@ -64,7 +64,7 @@ private struct PlainTextView: NSViewRepresentable {
         return scroll
     }
 
-    func updateNSView(_ scroll: NSScrollView, context: Context) {
+    func updateNSView(_ scroll: NSScrollView, context _: Context) {
         guard let tv = scroll.documentView as? NSTextView else { return }
         if tv.string != text {
             tv.string = text

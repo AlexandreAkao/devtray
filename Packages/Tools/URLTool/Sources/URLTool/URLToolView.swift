@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import DevTrayUI
+import SwiftUI
 import URLToolKit
 
 public struct URLToolView: View {

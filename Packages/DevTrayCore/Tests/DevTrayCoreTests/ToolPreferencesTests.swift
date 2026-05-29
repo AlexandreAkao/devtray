@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 @MainActor
 final class ToolPreferencesTests: XCTestCase {

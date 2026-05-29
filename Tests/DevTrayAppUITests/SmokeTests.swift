@@ -13,7 +13,7 @@ final class SmokeTests: XCTestCase {
         app.terminate()
     }
 
-    func test_app_launches_andShowsMenuBarItem() throws {
+    func test_app_launches_andShowsMenuBarItem() {
         // A status bar item exists for our app.
         // We can't easily find the specific menu bar extra via accessibility from
         // a different process, so this test asserts the app launched successfully

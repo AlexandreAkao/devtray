@@ -1,6 +1,6 @@
-import SwiftUI
 import DevTrayCore
 import SnippetsToolKit
+import SwiftUI
 
 public enum SnippetsTool: Tool {
     public static let id: ToolID = "snippets"
