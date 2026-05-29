@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release:
-    name: build · ad-hoc sign · publish
+    name: build · sign · notarize · publish
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -61,18 +61,95 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Ad-hoc sign with hardened runtime
+      - name: Setup signing env
         run: |
-          APP="build/Build/Products/Release/DevTrayApp.app"
-          codesign --force --deep --options runtime --sign - "$APP"
-          codesign --verify --deep --strict "$APP"
+          echo "KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db" >> "$GITHUB_ENV"
+          echo "APP_PATH=build/Build/Products/Release/DevTrayApp.app" >> "$GITHUB_ENV"
 
-      - name: Zip
+      - name: Import Developer ID certificate
+        env:
+          P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          echo "$P12_BASE64" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | tr -d '" ')
+
+      - name: Detect signing identity
+        run: |
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | awk '/Developer ID Application/ {print $2; exit}')
+          if [ -z "$IDENTITY" ]; then
+            echo "::error::Developer ID Application identity not found in imported keychain"
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+            exit 1
+          fi
+          echo "IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "Detected signing identity: $IDENTITY"
+
+      - name: Sign app with Developer ID (hardened runtime + secure timestamp)
+        run: |
+          codesign --force --deep --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            --keychain "$KEYCHAIN_PATH" \
+            "$APP_PATH"
+
+      - name: Verify signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          codesign -dvv "$APP_PATH" 2>&1 | grep -E 'TeamIdentifier|Authority' || true
+
+      - name: Decode App Store Connect API key
+        env:
+          API_KEY_P8: ${{ secrets.APPSTORE_CONNECT_API_KEY_P8 }}
+        run: |
+          echo "$API_KEY_P8" | base64 --decode > /tmp/key.p8
+          chmod 600 /tmp/key.p8
+
+      - name: Zip for notarytool submission
+        run: |
+          ditto -c -k --keepParent "$APP_PATH" "DevTray-${{ steps.ver.outputs.short }}-notary.zip"
+
+      - name: Notarize (wait, log on failure)
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          ISSUER: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -e
+          SUBMISSION_JSON=$(xcrun notarytool submit \
+            "DevTray-${{ steps.ver.outputs.short }}-notary.zip" \
+            --key /tmp/key.p8 \
+            --key-id "$KEY_ID" \
+            --issuer "$ISSUER" \
+            --wait \
+            --output-format json)
+          echo "$SUBMISSION_JSON"
+          STATUS=$(echo "$SUBMISSION_JSON" | jq -r '.status')
+          SUBMISSION_ID=$(echo "$SUBMISSION_JSON" | jq -r '.id')
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "::error::Notarization failed: status=$STATUS, submission=$SUBMISSION_ID"
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --key /tmp/key.p8 \
+              --key-id "$KEY_ID" \
+              --issuer "$ISSUER"
+            exit 1
+          fi
+
+      - name: Staple ticket
+        run: |
+          xcrun stapler staple "$APP_PATH"
+          xcrun stapler validate "$APP_PATH"
+
+      - name: Zip stapled app (final shipping artifact)
         id: zip
         run: |
-          APP="build/Build/Products/Release/DevTrayApp.app"
           ZIP="DevTray-${{ steps.ver.outputs.short }}.zip"
-          ditto -c -k --keepParent "$APP" "$ZIP"
+          ditto -c -k --keepParent "$APP_PATH" "$ZIP"
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
           echo "length=$(stat -f%z "$ZIP")" >> "$GITHUB_OUTPUT"
 
