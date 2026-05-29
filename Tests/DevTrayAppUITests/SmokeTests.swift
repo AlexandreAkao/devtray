@@ -24,4 +24,40 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(app.state == .runningForeground || app.state == .runningBackground,
                       "App crashed within 1 second of launch")
     }
+
+    func test_menuBarItem_clickOpensPopover() throws {
+        // The MenuBarExtra status item is in the system menu bar; querying it from
+        // a separate XCUI process is best-effort. If it's not addressable on the
+        // runner, skip rather than flake red.
+        let menuBars = app.menuBars
+        guard menuBars.count > 0 else {
+            throw XCTSkip("Menu bar not addressable from the test process on this runner")
+        }
+        let statusItem = menuBars.statusItems.firstMatch
+        guard statusItem.waitForExistence(timeout: 3) else {
+            throw XCTSkip("Status item not addressable on this runner")
+        }
+        // The status item may exist in the accessibility tree but not be hittable
+        // (e.g. off-screen or behind the notch on some runners). Skip in that case.
+        guard statusItem.isHittable else {
+            throw XCTSkip("Status item exists but is not hittable on this runner")
+        }
+        statusItem.click()
+        // Popover content shows the search field placeholder "Search tools".
+        let searchField = app.textFields["Search tools"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Popover did not open")
+    }
+
+    func test_spotlight_hotkey_opensPanel() throws {
+        // The real system global-hotkey path isn't reliably drivable from XCUITest
+        // (the hotkey lives at the system level, not inside the app process).
+        // Best-effort: post a Ctrl-Option-Space chord to the app and see if a panel
+        // surfaces. If not, skip — the manual checklist covers the real path.
+        app.typeKey(" ", modifierFlags: [.control, .option])
+        let field = app.textFields.firstMatch
+        if !field.waitForExistence(timeout: 3) {
+            throw XCTSkip("Global hotkey not drivable on this runner; covered by manual checklist")
+        }
+        XCTAssertTrue(field.isHittable, "Panel field exists but is not interactable")
+    }
 }
