@@ -24,6 +24,7 @@ import YAMLTool
 struct DevTrayApp: App {
     @StateObject private var registry: ToolRegistry
     @StateObject private var updater = UpdaterController()
+    @StateObject private var toolPreferences: ToolPreferences
     private let usageStore: any UsageStore = makeUsageStore()
     private let snippetStore: any SnippetStore = makeSnippetStore()
     private let preloadBus = PreloadBus()
@@ -32,11 +33,14 @@ struct DevTrayApp: App {
     init() {
         let registryValue = makeRegistry()
         _registry = StateObject(wrappedValue: registryValue)
+        let prefs = ToolPreferences()
+        _toolPreferences = StateObject(wrappedValue: prefs)
         let controller = SpotlightController(
             registry: registryValue,
             usageStore: usageStore,
             snippetStore: snippetStore,
-            preloadBus: preloadBus
+            preloadBus: preloadBus,
+            toolPreferences: prefs
         )
         _spotlightController = State(initialValue: controller)
 
@@ -53,6 +57,7 @@ struct DevTrayApp: App {
                 canCheckForUpdates: updater.canCheckForUpdates
             )
                 .environmentObject(registry)
+                .environmentObject(toolPreferences)
                 .environment(\.usageStore, usageStore)
                 .environment(\.snippetStore, snippetStore)
                 .environment(\.preloadBus, preloadBus)
@@ -63,6 +68,8 @@ struct DevTrayApp: App {
             SettingsView()
                 .environment(\.snippetStore, snippetStore)
                 .environmentObject(updater)
+                .environmentObject(registry)
+                .environmentObject(toolPreferences)
         }
     }
 }
@@ -111,12 +118,14 @@ private struct SettingsView: View {
         TabView {
             GeneralTab()
                 .tabItem { Label("General", systemImage: "gearshape") }
+            ToolsTab()
+                .tabItem { Label("Tools", systemImage: "square.grid.2x2") }
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 480, height: 320)
+        .frame(width: 480, height: 400)
     }
 }
 
@@ -208,6 +217,30 @@ private struct GeneralTab: View {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: .now)
+    }
+}
+
+private struct ToolsTab: View {
+    @EnvironmentObject private var registry: ToolRegistry
+    @EnvironmentObject private var toolPreferences: ToolPreferences
+
+    var body: some View {
+        Form {
+            Section("Enabled tools") {
+                ForEach(registry.tools) { tool in
+                    Toggle(isOn: Binding(
+                        get: { toolPreferences.isEnabled(tool.id) },
+                        set: { toolPreferences.setEnabled($0, for: tool.id) }
+                    )) {
+                        Label(tool.displayName, systemImage: tool.iconName)
+                    }
+                }
+            }
+            Text("Disabled tools are hidden from the popover and Spotlight.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
+        .padding()
     }
 }
 

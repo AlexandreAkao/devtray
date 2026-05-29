@@ -12,6 +12,11 @@ public final class ToolRegistry: ObservableObject {
         tools.append(anyTool)
     }
 
+    public func adopt(_ tool: AnyTool) {
+        guard !tools.contains(where: { $0.id == tool.id }) else { return }
+        tools.append(tool)
+    }
+
     public func find(byID id: ToolID) -> AnyTool? {
         tools.first { $0.id == id }
     }

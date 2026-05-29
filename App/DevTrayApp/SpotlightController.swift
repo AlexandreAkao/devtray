@@ -10,16 +10,19 @@ final class SpotlightController {
     private let usageStore: any UsageStore
     private let snippetStore: any SnippetStore
     private let preloadBus: PreloadBus
+    private let toolPreferences: ToolPreferences
     private var panel: SpotlightPanel?
     private var resignObserver: Any?
     private let logger = Logger(subsystem: "com.devtray.app", category: "spotlight")
 
     init(registry: ToolRegistry, usageStore: any UsageStore,
-         snippetStore: any SnippetStore, preloadBus: PreloadBus) {
+         snippetStore: any SnippetStore, preloadBus: PreloadBus,
+         toolPreferences: ToolPreferences) {
         self.registry = registry
         self.usageStore = usageStore
         self.snippetStore = snippetStore
         self.preloadBus = preloadBus
+        self.toolPreferences = toolPreferences
     }
 
     func toggle() {
@@ -58,8 +61,10 @@ final class SpotlightController {
     }
 
     private func installContent(panel: SpotlightPanel, clipboard: String?) {
-        let ranker = SpotlightRanker(registry: registry, usage: usageStore)
-        let capturedRegistry = registry
+        let enabledRegistry = ToolRegistry()
+        for tool in toolPreferences.enabled(registry.tools) { enabledRegistry.adopt(tool) }
+        let ranker = SpotlightRanker(registry: enabledRegistry, usage: usageStore)
+        let capturedRegistry = enabledRegistry
         let view = SpotlightSearchView(
             viewModel: { [capturedRegistry] in
                 let vm = SpotlightViewModel(ranker: ranker, registry: capturedRegistry)
