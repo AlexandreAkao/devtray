@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import DevTrayCore
 import DevTrayUI
@@ -6,6 +7,7 @@ import HashToolKit
 public struct HashToolView: View {
     @Environment(\.preloadBus) private var preloadBus: PreloadBus
     @State private var input: String = ""
+    @State private var fileName: String?
     @State private var md5: String = ""
     @State private var sha1: String = ""
     @State private var sha256: String = ""
@@ -16,6 +18,13 @@ public struct HashToolView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Button("Choose file…") { chooseFile() }
+                if let fileName {
+                    Text(fileName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Button("Clear") { self.fileName = nil; recompute() }
+                }
+            }
             CodeEditor(text: $input, placeholder: "Text to hash", minHeight: 80)
                 .onChange(of: input) { _, _ in recompute() }
 
@@ -57,7 +66,31 @@ public struct HashToolView: View {
         }
     }
 
+    private func chooseFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            // Loads the whole file into memory; fine for dev-tool file sizes.
+            let data = try Data(contentsOf: url)
+            fileName = url.lastPathComponent
+            hash(data)
+        } catch {
+            fileName = nil
+            self.error = .invalidInput(reason: "Could not read \(url.lastPathComponent): \(error.localizedDescription)")
+        }
+    }
+
+    private func hash(_ data: Data) {
+        func val(_ r: Result<String, ToolError>) -> String { (try? r.get()) ?? "" }
+        md5 = val(HashEngine.md5(data: data)); sha1 = val(HashEngine.sha1(data: data))
+        sha256 = val(HashEngine.sha256(data: data)); sha512 = val(HashEngine.sha512(data: data))
+        error = data.isEmpty ? .invalidInput(reason: "File is empty") : nil
+    }
+
     private func recompute() {
+        fileName = nil
         guard !input.isEmpty else {
             md5 = ""; sha1 = ""; sha256 = ""; sha512 = ""
             error = nil

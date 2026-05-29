@@ -3,32 +3,18 @@ import CryptoKit
 import DevTrayCore
 
 public enum HashEngine {
-    public static func md5(_ raw: String) -> Result<String, ToolError> {
-        compute(raw) { data in Insecure.MD5.hash(data: data) }
-    }
+    public static func md5(_ raw: String) -> Result<String, ToolError> { md5(data: Data(raw.utf8)) }
+    public static func sha1(_ raw: String) -> Result<String, ToolError> { sha1(data: Data(raw.utf8)) }
+    public static func sha256(_ raw: String) -> Result<String, ToolError> { sha256(data: Data(raw.utf8)) }
+    public static func sha512(_ raw: String) -> Result<String, ToolError> { sha512(data: Data(raw.utf8)) }
 
-    public static func sha1(_ raw: String) -> Result<String, ToolError> {
-        compute(raw) { data in Insecure.SHA1.hash(data: data) }
-    }
+    public static func md5(data: Data) -> Result<String, ToolError> { compute(data) { Insecure.MD5.hash(data: $0) } }
+    public static func sha1(data: Data) -> Result<String, ToolError> { compute(data) { Insecure.SHA1.hash(data: $0) } }
+    public static func sha256(data: Data) -> Result<String, ToolError> { compute(data) { SHA256.hash(data: $0) } }
+    public static func sha512(data: Data) -> Result<String, ToolError> { compute(data) { SHA512.hash(data: $0) } }
 
-    public static func sha256(_ raw: String) -> Result<String, ToolError> {
-        compute(raw) { data in SHA256.hash(data: data) }
-    }
-
-    public static func sha512(_ raw: String) -> Result<String, ToolError> {
-        compute(raw) { data in SHA512.hash(data: data) }
-    }
-
-    private static func compute<D: Digest>(
-        _ raw: String,
-        digest: (Data) -> D
-    ) -> Result<String, ToolError> {
-        guard !raw.isEmpty else {
-            return .failure(.invalidInput(reason: "Input is empty"))
-        }
-        let data = Data(raw.utf8)
-        let bytes = digest(data)
-        let hex = bytes.map { String(format: "%02x", $0) }.joined()
-        return .success(hex)
+    private static func compute<D: Digest>(_ data: Data, digest: (Data) -> D) -> Result<String, ToolError> {
+        guard !data.isEmpty else { return .failure(.invalidInput(reason: "Input is empty")) }
+        return .success(digest(data).map { String(format: "%02x", $0) }.joined())
     }
 }
