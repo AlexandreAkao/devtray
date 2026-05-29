@@ -3,6 +3,7 @@ import DevTrayCore
 
 public struct PopoverRoot: View {
     @EnvironmentObject private var registry: ToolRegistry
+    @EnvironmentObject private var toolPreferences: ToolPreferences
     @Environment(\.usageStore) private var usageStore
     @Environment(\.preloadBus) private var preloadBus: PreloadBus
 
@@ -42,7 +43,7 @@ public struct PopoverRoot: View {
         }
         .onAppear {
             if selectedToolID == nil {
-                selectedToolID = filteredTools.first?.id
+                selectedToolID = visibleTools.first?.id
             }
             hasBootstrapped = true
         }
@@ -50,6 +51,11 @@ public struct PopoverRoot: View {
             guard let payload else { return }
             selectedToolID = payload.toolID
             // Text consumption happens inside the tool view, not here.
+        }
+        .onChange(of: toolPreferences.disabledIDs) { _, _ in
+            if let id = selectedToolID, !toolPreferences.isEnabled(id) {
+                selectedToolID = visibleTools.first?.id
+            }
         }
     }
 
@@ -75,15 +81,40 @@ public struct PopoverRoot: View {
     private var sidebar: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(filteredTools) { tool in
-                    SidebarRow(tool: tool, isSelected: tool.id == selectedToolID)
-                        .onTapGesture { selectedToolID = tool.id }
+                if visibleTools.isEmpty {
+                    Text("All tools are disabled.\nEnable some in Settings → Tools.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .padding(8)
+                } else if isSearching {
+                    ForEach(visibleTools) { tool in row(tool) }
+                } else {
+                    ForEach(groupedTools, id: \.category) { group in
+                        Text(group.category.displayName)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8).padding(.top, 6)
+                        ForEach(group.tools) { tool in row(tool) }
+                    }
                 }
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 6)
+            .padding(.vertical, 6).padding(.horizontal, 6)
         }
-        .frame(width: 130)
+        .frame(width: 150)
+        .background(cmdNumberShortcuts)
+    }
+
+    private func row(_ tool: AnyTool) -> some View {
+        SidebarRow(tool: tool, isSelected: tool.id == selectedToolID)
+            .onTapGesture { selectedToolID = tool.id }
+    }
+
+    // Hidden buttons binding Cmd+1…9 to the first nine visible tools.
+    private var cmdNumberShortcuts: some View {
+        ForEach(Array(visibleTools.prefix(9).enumerated()), id: \.element.id) { idx, tool in
+            Button("") { selectedToolID = tool.id }
+                .keyboardShortcut(KeyEquivalent(Character("\(idx + 1)")), modifiers: .command)
+                .hidden()
+        }
     }
 
     private var workspace: some View {
@@ -129,8 +160,23 @@ public struct PopoverRoot: View {
         .frame(height: 32)
     }
 
-    private var filteredTools: [AnyTool] {
-        registry.search(searchText)
+    // Flat list honoring search + enabled state (used for selection + Cmd+1…9).
+    private var visibleTools: [AnyTool] {
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return toolPreferences.enabled(registry.search(q))
+    }
+
+    // Grouped by category for the no-search sidebar.
+    private var groupedTools: [(category: ToolCategory, tools: [AnyTool])] {
+        let visible = visibleTools
+        return ToolCategory.allCases.compactMap { cat in
+            let inCat = visible.filter { $0.category == cat }
+            return inCat.isEmpty ? nil : (cat, inCat)
+        }
+    }
+
+    private var isSearching: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func refreshTopTools() async {
