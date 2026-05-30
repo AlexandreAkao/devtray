@@ -1,6 +1,7 @@
 import Foundation
+import Combine
 
-public actor TrialTracker {
+public actor TrialTracker: ObservableObject {
     private let keychain: KeychainProtocol
     private let clock: @Sendable () -> Date
     private let encoder: JSONEncoder
