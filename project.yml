@@ -67,7 +67,7 @@ targets:
         SUFeedURL: https://alexandreakao.github.io/devtray/appcast.xml
         SUPublicEDKey: "ZxyqDIzwmdH+/nfaxtGzTqG+ZZ3ZgNob8Ei0gS3k948="
         SUScheduledCheckInterval: 604800
-        LICENSE_PUBLIC_KEY: PLACEHOLDER_REPLACE_VIA_T35
+        LICENSE_PUBLIC_KEY: "P3j8PqYXbz/DYtQoc6VC1ko8+cXLtyJK8jJGrNqS6Q0="
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - devtray
