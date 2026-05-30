@@ -48,6 +48,28 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Popover did not open")
     }
 
+    func test_trialBannerVisibleOnFreshLaunch() throws {
+        // Fresh launch (no stored license) should land in trial state, and the
+        // popover should render TrialBanner. Reuse the same menu-bar-driven
+        // popover-open path as test_menuBarItem_clickOpensPopover, with the
+        // same skip guards for runners that can't address the status item.
+        let menuBars = app.menuBars
+        guard menuBars.count > 0 else {
+            throw XCTSkip("Menu bar not addressable from the test process on this runner")
+        }
+        let statusItem = menuBars.statusItems.firstMatch
+        guard statusItem.waitForExistence(timeout: 3) else {
+            throw XCTSkip("Status item not addressable on this runner")
+        }
+        guard statusItem.isHittable else {
+            throw XCTSkip("Status item exists but is not hittable on this runner")
+        }
+        statusItem.click()
+        let banner = app.otherElements["TrialBanner"]
+        XCTAssertTrue(banner.waitForExistence(timeout: 5),
+                      "TrialBanner should be visible on a fresh-trial launch")
+    }
+
     func test_spotlight_hotkey_opensPanel() throws {
         // The real system global-hotkey path isn't reliably drivable from XCUITest
         // (the hotkey lives at the system level, not inside the app process).
