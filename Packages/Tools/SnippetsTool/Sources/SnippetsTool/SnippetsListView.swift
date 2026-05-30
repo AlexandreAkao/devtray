@@ -25,6 +25,7 @@ struct SnippetsListView: View {
                     Image(systemName: "plus")
                 }
                 .help("New snippet")
+                .paywalled()
             }
 
             if let error = model.error {
