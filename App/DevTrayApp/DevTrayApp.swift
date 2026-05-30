@@ -157,18 +157,31 @@ private func makeSnippetStore() -> any SnippetStore {
 }
 
 private struct SettingsView: View {
+    enum Tab: Hashable { case general, tools, shortcuts, license, about }
+    @State private var selectedTab: Tab = .general
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             GeneralTab()
                 .tabItem { Label("General", systemImage: "gearshape") }
+                .tag(Tab.general)
             ToolsTab()
                 .tabItem { Label("Tools", systemImage: "square.grid.2x2") }
+                .tag(Tab.tools)
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+                .tag(Tab.shortcuts)
+            LicenseTab()
+                .tabItem { Label("License", systemImage: "key.fill") }
+                .tag(Tab.license)
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
+                .tag(Tab.about)
         }
         .frame(width: 480, height: 400)
+        .onReceive(NotificationCenter.default.publisher(for: .selectLicenseTab)) { _ in
+            selectedTab = .license
+        }
     }
 }
 
