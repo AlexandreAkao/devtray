@@ -64,7 +64,7 @@ jobs:
       - name: Setup signing env
         run: |
           echo "KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db" >> "$GITHUB_ENV"
-          echo "APP_PATH=build/Build/Products/Release/DevTrayApp.app" >> "$GITHUB_ENV"
+          echo "APP_PATH=build/Build/Products/Release/DevTray.app" >> "$GITHUB_ENV"
 
       - name: Import Developer ID certificate
         env:
