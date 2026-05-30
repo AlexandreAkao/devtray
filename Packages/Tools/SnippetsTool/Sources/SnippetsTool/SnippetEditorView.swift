@@ -47,6 +47,7 @@ struct SnippetEditorView: View {
         .padding(12)
         .onAppear(perform: loadFields)
         .onChange(of: snippet.id) { _, _ in loadFields() }
+        .paywalled()
     }
 
     private func loadFields() {
