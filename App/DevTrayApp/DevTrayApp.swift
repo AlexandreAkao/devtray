@@ -292,6 +292,7 @@ private struct ToolsTab: View {
                     }
                 }
             }
+            .paywalled()
             Text("Disabled tools are hidden from the popover and Spotlight.")
                 .font(.caption).foregroundStyle(.secondary)
         }
