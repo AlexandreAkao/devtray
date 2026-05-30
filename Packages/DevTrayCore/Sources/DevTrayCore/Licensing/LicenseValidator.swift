@@ -48,7 +48,7 @@ public struct LicenseValidator: Sendable {
         else { throw LicenseValidationError.invalidAlgorithm }
 
         guard let sigData = Data(base64URLEncoded: sigB64) else {
-            throw LicenseValidationError.malformedToken
+            throw LicenseValidationError.invalidSignature
         }
 
         let signingInput = "\(headerB64).\(payloadB64)"
@@ -78,14 +78,14 @@ public struct LicenseValidator: Sendable {
 // MARK: - base64url helpers
 
 extension Data {
-    public func base64URLEncodedString() -> String {
+    func base64URLEncodedString() -> String {
         base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
     }
 
-    public init?(base64URLEncoded: String) {
+    init?(base64URLEncoded: String) {
         var s = base64URLEncoded
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
