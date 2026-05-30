@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 public struct ActivationResponse: Codable, Sendable, Equatable {
     public let ok: Bool
@@ -17,7 +18,7 @@ public enum LicenseClientError: Error, Equatable {
     case transport                          // generic for activate/deactivate
 }
 
-public actor LicenseClient {
+public actor LicenseClient: ObservableObject {
     private let baseURL: URL
     private let session: URLSession
     private let decoder: JSONDecoder

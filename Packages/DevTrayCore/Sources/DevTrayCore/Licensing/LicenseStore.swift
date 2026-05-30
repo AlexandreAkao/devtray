@@ -1,6 +1,7 @@
 import Foundation
+import Combine
 
-public actor LicenseStore {
+public actor LicenseStore: ObservableObject {
     public struct Stored: Equatable, Sendable {
         public let jwt: String
         public let claims: LicenseClaims
