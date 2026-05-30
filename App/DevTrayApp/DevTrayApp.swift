@@ -25,16 +25,41 @@ struct DevTrayApp: App {
     @StateObject private var registry: ToolRegistry
     @StateObject private var updater = UpdaterController()
     @StateObject private var toolPreferences: ToolPreferences
+    @StateObject private var licenseStore: LicenseStore
+    @StateObject private var trialTracker: TrialTracker
+    @StateObject private var licenseClient: LicenseClient
+    @StateObject private var licenseCoordinator: LicenseCoordinator
     private let usageStore: any UsageStore = makeUsageStore()
     private let snippetStore: any SnippetStore = makeSnippetStore()
     private let preloadBus = PreloadBus()
     @State private var spotlightController: SpotlightController?
 
     init() {
+        // Guard against shipping a Release build with the placeholder pubkey.
+        if let pk = Bundle.main.object(forInfoDictionaryKey: "LICENSE_PUBLIC_KEY") as? String,
+           pk == "PLACEHOLDER_REPLACE_VIA_T35" {
+            fputs("FATAL: LICENSE_PUBLIC_KEY is still the placeholder. " +
+                  "Author must replace per docs/superpowers/plans/2026-05-30-devtray-v0.11-paywall.md T35.\n",
+                  stderr)
+            #if !DEBUG
+            exit(1)
+            #endif
+        }
+
         let registryValue = makeRegistry()
         _registry = StateObject(wrappedValue: registryValue)
         let prefs = ToolPreferences()
         _toolPreferences = StateObject(wrappedValue: prefs)
+
+        let store = LicenseStore()
+        let tracker = TrialTracker()
+        let client = LicenseClient()
+        _licenseStore = StateObject(wrappedValue: store)
+        _trialTracker = StateObject(wrappedValue: tracker)
+        _licenseClient = StateObject(wrappedValue: client)
+        _licenseCoordinator = StateObject(wrappedValue:
+            LicenseCoordinator(store: store, tracker: tracker, client: client))
+
         let controller = SpotlightController(
             registry: registryValue,
             usageStore: usageStore,
@@ -61,6 +86,16 @@ struct DevTrayApp: App {
             .environment(\.usageStore, usageStore)
             .environment(\.snippetStore, snippetStore)
             .environment(\.preloadBus, preloadBus)
+            .environment(\.licenseState, licenseCoordinator.state)
+            .environment(\.licenseStore, licenseStore)
+            .environment(\.licenseClient, licenseClient)
+            .environment(\.trialTracker, trialTracker)
+            .task {
+                await licenseCoordinator.bootstrap()
+            }
+            .onOpenURL { url in
+                Task { await licenseCoordinator.handleActivationURL(url) }
+            }
         }
         .menuBarExtraStyle(.window)
 
@@ -70,7 +105,15 @@ struct DevTrayApp: App {
                 .environmentObject(updater)
                 .environmentObject(registry)
                 .environmentObject(toolPreferences)
+                .environment(\.licenseState, licenseCoordinator.state)
+                .environment(\.licenseStore, licenseStore)
+                .environment(\.licenseClient, licenseClient)
+                .environment(\.trialTracker, trialTracker)
+                .onOpenURL { url in
+                    Task { await licenseCoordinator.handleActivationURL(url) }
+                }
         }
+        .handlesExternalEvents(matching: ["activate"])
     }
 }
 
