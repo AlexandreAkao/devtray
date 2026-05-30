@@ -62,11 +62,16 @@ targets:
       properties:
         LSUIElement: true
         CFBundleDisplayName: DevTray
-        CFBundleShortVersionString: "0.10.0"
-        CFBundleVersion: "10"
+        CFBundleShortVersionString: "0.11.0"
+        CFBundleVersion: "11"
         SUFeedURL: https://alexandreakao.github.io/devtray/appcast.xml
         SUPublicEDKey: "ZxyqDIzwmdH+/nfaxtGzTqG+ZZ3ZgNob8Ei0gS3k948="
         SUScheduledCheckInterval: 604800
+        LICENSE_PUBLIC_KEY: PLACEHOLDER_REPLACE_VIA_T35
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - devtray
+            CFBundleURLName: com.devtray.DevTrayApp.activate
     entitlements:
       path: App/DevTrayApp/DevTrayApp.entitlements
       properties:
@@ -96,6 +101,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.devtray.app
         ENABLE_HARDENED_RUNTIME: YES
+        PRODUCT_NAME: DevTray
   DevTrayAppUITests:
     type: bundle.ui-testing
     platform: macOS
