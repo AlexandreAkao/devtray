@@ -127,9 +127,9 @@ describe("routes/webhook", () => {
 
     const keys = await env.LICENSES.list();
     const matches = await Promise.all(
-      keys.keys.map((k) => env.LICENSES.get(k.name, "json") as Promise<{ ls_order_id: string; revoked: boolean }>)
+      keys.keys.map((k: { name: string }) => env.LICENSES.get(k.name, "json") as Promise<{ ls_order_id: string; revoked: boolean }>)
     );
-    const refunded = matches.find((r) => r.ls_order_id === orderId);
+    const refunded = matches.find((r: { ls_order_id: string; revoked: boolean }) => r.ls_order_id === orderId);
     expect(refunded?.revoked).toBe(true);
   });
 });
