@@ -102,4 +102,17 @@ final class LicenseValidatorTests: XCTestCase {
             XCTAssertEqual(err as? LicenseValidationError, .unsupportedTier)
         }
     }
+
+    func test_verify_malformedSignatureEncoding_throwsInvalidSignature() throws {
+        // Build a real token, then replace the sig segment with non-base64url garbage.
+        let realToken = try makeToken()
+        let body = String(realToken.dropFirst("DT1-".count))
+        let parts = body.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
+        XCTAssertEqual(parts.count, 3)
+        let garbage = "!!!not-base64-at-all!!!"
+        let tampered = "DT1-\(parts[0]).\(parts[1]).\(garbage)"
+        XCTAssertThrowsError(try validator.verify(tampered)) { err in
+            XCTAssertEqual(err as? LicenseValidationError, .invalidSignature)
+        }
+    }
 }
