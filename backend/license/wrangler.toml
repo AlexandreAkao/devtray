@@ -1,0 +1,29 @@
+name = "devtray-license"
+main = "src/index.ts"
+compatibility_date = "2026-05-30"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain wired in CF dashboard after first deploy:
+# routes = [{ pattern = "api.devtray.app/*", custom_domain = true }]
+
+# KV namespaces — IDs filled in by author after `wrangler kv:namespace create` (see T35).
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "REPLACE_ME_LICENSES_ID"
+
+[[kv_namespaces]]
+binding = "LICENSES_TEST"
+id = "REPLACE_ME_LICENSES_TEST_ID"
+
+[[kv_namespaces]]
+binding = "EVENTS"
+id = "REPLACE_ME_EVENTS_ID"
+
+# Secrets set via `wrangler secret put <NAME>` (NOT committed):
+#   LICENSE_PRIVATE_KEY          base64 of raw 32-byte Ed25519 private key
+#   LEMONSQUEEZY_WEBHOOK_SECRET  from LS dashboard
+#   RESEND_API_KEY               from Resend dashboard
+#   ADMIN_TOKEN                  random 32 bytes base64
+
+[vars]
+LICENSE_ISS = "api.devtray.app"
