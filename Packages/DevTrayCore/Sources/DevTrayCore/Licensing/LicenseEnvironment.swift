@@ -17,7 +17,7 @@ public extension EnvironmentValues {
 // MARK: - LicenseStore env
 
 private struct LicenseStoreKey: EnvironmentKey {
-    static let defaultValue: LicenseStore = LicenseStore(keychain: InMemoryKeychain())
+    static let defaultValue: LicenseStore = .init(keychain: InMemoryKeychain())
 }
 
 public extension EnvironmentValues {
@@ -30,7 +30,7 @@ public extension EnvironmentValues {
 // MARK: - LicenseClient env
 
 private struct LicenseClientKey: EnvironmentKey {
-    static let defaultValue: LicenseClient = LicenseClient()
+    static let defaultValue: LicenseClient = .init()
 }
 
 public extension EnvironmentValues {
@@ -43,7 +43,7 @@ public extension EnvironmentValues {
 // MARK: - TrialTracker env
 
 private struct TrialTrackerKey: EnvironmentKey {
-    static let defaultValue: TrialTracker = TrialTracker(keychain: InMemoryKeychain())
+    static let defaultValue: TrialTracker = .init(keychain: InMemoryKeychain())
 }
 
 public extension EnvironmentValues {

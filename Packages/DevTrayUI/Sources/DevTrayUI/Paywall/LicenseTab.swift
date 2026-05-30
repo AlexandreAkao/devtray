@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct LicenseTab: View {
     @Environment(\.licenseState) private var licenseState: LicenseState
@@ -63,13 +63,13 @@ public struct LicenseTab: View {
                 .font(.callout).foregroundStyle(.secondary)
         } else {
             TextField("Paste DT1-… key", text: $pasteField, axis: .vertical)
-                .lineLimit(2...4)
+                .lineLimit(2 ... 4)
                 .textFieldStyle(.roundedBorder)
                 .font(.system(.callout, design: .monospaced))
             HStack {
                 Button("Activate") { Task { await runActivate() } }
                     .disabled(pasteField.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                              || status == .working)
+                        || status == .working)
                     .buttonStyle(.borderedProminent)
                 if case .error(let msg) = status {
                     Text(msg).font(.caption).foregroundStyle(.red)
@@ -98,7 +98,7 @@ public struct LicenseTab: View {
         VStack(alignment: .leading, spacing: 6) {
             if case .licensed = licenseState {
                 Text("Need to deactivate another Mac you can't reach? Email ")
-                + Text("[support@devtray.app](mailto:support@devtray.app)")
+                    + Text("[support@devtray.app](mailto:support@devtray.app)")
             } else {
                 Link("Buy a license — $19", destination: PaywallView.buyURL)
                 Text("All 13 tools and Spotlight stay free forever.")

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 public actor LicenseStore: ObservableObject {
     public struct Stored: Equatable, Sendable {
@@ -26,9 +26,9 @@ public actor LicenseStore: ObservableObject {
 
     public func storeLicense(_ jwt: String, claims: LicenseClaims, machineHash: String) throws {
         try keychain.set(Data(jwt.utf8), account: Account.licenseJWT)
-        try keychain.set(try encoder.encode(claims), account: Account.claims)
+        try keychain.set(encoder.encode(claims), account: Account.claims)
         try keychain.set(Data(machineHash.utf8), account: Account.machineHash)
-        try keychain.set(try encoder.encode(clock()), account: Account.activatedAt)
+        try keychain.set(encoder.encode(clock()), account: Account.activatedAt)
     }
 
     public func storedLicense() throws -> Stored? {

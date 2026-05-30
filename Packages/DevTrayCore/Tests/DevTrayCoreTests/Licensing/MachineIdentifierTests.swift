@@ -1,6 +1,6 @@
-import XCTest
 import CryptoKit
 @testable import DevTrayCore
+import XCTest
 
 final class MachineIdentifierTests: XCTestCase {
     func test_hash_isStableForSameInputs() throws {

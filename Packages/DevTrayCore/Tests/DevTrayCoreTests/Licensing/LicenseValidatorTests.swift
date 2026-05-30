@@ -1,6 +1,6 @@
-import XCTest
 import CryptoKit
 @testable import DevTrayCore
+import XCTest
 
 final class LicenseValidatorTests: XCTestCase {
     private var privateKey: Curve25519.Signing.PrivateKey!

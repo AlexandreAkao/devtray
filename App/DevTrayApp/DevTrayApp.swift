@@ -39,10 +39,10 @@ struct DevTrayApp: App {
         if let pk = Bundle.main.object(forInfoDictionaryKey: "LICENSE_PUBLIC_KEY") as? String,
            pk == "PLACEHOLDER_REPLACE_VIA_T35" {
             fputs("FATAL: LICENSE_PUBLIC_KEY is still the placeholder. " +
-                  "Author must replace per docs/superpowers/plans/2026-05-30-devtray-v0.11-paywall.md T35.\n",
-                  stderr)
+                "Author must replace per docs/superpowers/plans/2026-05-30-devtray-v0.11-paywall.md T35.\n",
+                stderr)
             #if !DEBUG
-            exit(1)
+                exit(1)
             #endif
         }
 

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 public struct ActivationResponse: Codable, Sendable, Equatable {
     public let ok: Bool
@@ -11,11 +11,11 @@ public struct HeartbeatResponse: Codable, Sendable, Equatable {
 }
 
 public enum LicenseClientError: Error, Equatable {
-    case activationFailed(reason: String)  // 403 with {"error":"..."}
-    case licenseNotFound                    // 404
+    case activationFailed(reason: String) // 403 with {"error":"..."}
+    case licenseNotFound // 404
     case unexpectedStatus(Int)
     case malformedResponse
-    case transport                          // generic for activate/deactivate
+    case transport // generic for activate/deactivate
 }
 
 public actor LicenseClient: ObservableObject {
@@ -108,7 +108,7 @@ public actor LicenseClient: ObservableObject {
         let error: String?
     }
 
-    private func makePOST<T: Encodable>(path: String, body: T, timeout: TimeInterval) throws -> URLRequest {
+    private func makePOST(path: String, body: some Encodable, timeout: TimeInterval) throws -> URLRequest {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")

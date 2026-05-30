@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct PaywallView: View {
     @Environment(\.licenseState) private var licenseState: LicenseState
@@ -92,7 +92,6 @@ public struct PaywallView: View {
         }
     }
 
-    @ViewBuilder
     private func check(_ on: Bool) -> some View {
         Image(systemName: on ? "checkmark.circle.fill" : "minus.circle")
             .foregroundStyle(on ? .green : .secondary)

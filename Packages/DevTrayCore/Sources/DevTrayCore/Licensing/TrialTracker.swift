@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 public actor TrialTracker: ObservableObject {
     private let keychain: KeychainProtocol
@@ -7,7 +7,7 @@ public actor TrialTracker: ObservableObject {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private static let trialDays = 14
-    private static let clockSetbackGraceSeconds: TimeInterval = 3600  // 1h
+    private static let clockSetbackGraceSeconds: TimeInterval = 3600 // 1h
 
     public init(keychain: KeychainProtocol = SystemKeychain(),
                 clock: @escaping @Sendable () -> Date = { Date() }) {
@@ -24,7 +24,7 @@ public actor TrialTracker: ObservableObject {
     public func ensureTrialStarted() throws -> Date {
         if let existing = try storedTrialStart() { return existing }
         let now = clock()
-        try keychain.set(try encoder.encode(now), account: Account.trialStart)
+        try keychain.set(encoder.encode(now), account: Account.trialStart)
         return now
     }
 
@@ -45,7 +45,7 @@ public actor TrialTracker: ObservableObject {
     }
 
     public func recordLastSeen() throws {
-        try keychain.set(try encoder.encode(clock()), account: Account.lastSeenAt)
+        try keychain.set(encoder.encode(clock()), account: Account.lastSeenAt)
     }
 
     // MARK: - Private

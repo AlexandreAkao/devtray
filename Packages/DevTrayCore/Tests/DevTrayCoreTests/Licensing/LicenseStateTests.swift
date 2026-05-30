@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class LicenseStateTests: XCTestCase {
     func test_isGated_untrialed_returnsFalse() {
@@ -30,7 +30,7 @@ final class LicenseStateTests: XCTestCase {
     }
 }
 
-// Fixture lives here for now; later moved alongside LicenseClaims.
+/// Fixture lives here for now; later moved alongside LicenseClaims.
 extension LicenseClaims {
     static func fixture(
         licenseUUID: UUID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,

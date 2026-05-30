@@ -1,14 +1,14 @@
-import Foundation
 import CryptoKit
+import Foundation
 
 public enum LicenseValidationError: Error, Equatable {
-    case unsupportedSchema       // missing DT1- prefix or wrong prefix
-    case malformedToken          // not exactly 3 dot-separated segments
-    case invalidAlgorithm        // alg != EdDSA or typ != JWT
-    case invalidSignature        // EdDSA verify failed
-    case malformedPayload        // JSON decode failed
-    case unsupportedTier         // tier != "v1"
-    case publicKeyMissing        // Info.plist LICENSE_PUBLIC_KEY missing / unparseable
+    case unsupportedSchema // missing DT1- prefix or wrong prefix
+    case malformedToken // not exactly 3 dot-separated segments
+    case invalidAlgorithm // alg != EdDSA or typ != JWT
+    case invalidSignature // EdDSA verify failed
+    case malformedPayload // JSON decode failed
+    case unsupportedTier // tier != "v1"
+    case publicKeyMissing // Info.plist LICENSE_PUBLIC_KEY missing / unparseable
 }
 
 /// Verifies DT1-prefixed Ed25519-signed JWT licenses against an embedded pubkey.
