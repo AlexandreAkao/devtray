@@ -3,8 +3,8 @@ main = "src/index.ts"
 compatibility_date = "2026-05-30"
 compatibility_flags = ["nodejs_compat"]
 
-# Custom domain wired in CF dashboard after first deploy:
-# routes = [{ pattern = "api.devtray.app/*", custom_domain = true }]
+# Custom domain — wrangler auto-creates DNS records on devtray.app:
+routes = [{ pattern = "api.devtray.app", custom_domain = true }]
 
 # KV namespaces — IDs filled in by author after `wrangler kv:namespace create` (see T35).
 [[kv_namespaces]]
