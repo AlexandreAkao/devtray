@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public struct TrialBanner: View {
     @Environment(\.licenseState) private var licenseState: LicenseState

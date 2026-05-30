@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class LicenseStoreTests: XCTestCase {
     private var kc: InMemoryKeychain!

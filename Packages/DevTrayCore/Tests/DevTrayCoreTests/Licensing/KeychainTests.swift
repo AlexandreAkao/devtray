@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class InMemoryKeychainTests: XCTestCase {
     func test_setThenGet_returnsValue() throws {

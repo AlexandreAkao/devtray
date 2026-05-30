@@ -1,5 +1,5 @@
-import SwiftUI
 import DevTrayCore
+import SwiftUI
 
 public extension View {
     /// Gates the modified view behind LicenseState (from @Environment).

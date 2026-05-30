@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class LicenseClientTests: XCTestCase {
     private var client: LicenseClient!
@@ -59,7 +59,7 @@ final class LicenseClientTests: XCTestCase {
         try await client.deactivate(licenseUUID: licenseUUID, machineHash: machineHash)
     }
 
-    func test_heartbeat_revokedTrue() async throws {
+    func test_heartbeat_revokedTrue() async {
         URLProtocolStub.responder = { _ in
             (HTTPURLResponse(statusCode: 200), Data(#"{"revoked":true}"#.utf8))
         }
@@ -67,7 +67,7 @@ final class LicenseClientTests: XCTestCase {
         XCTAssertTrue(resp.revoked)
     }
 
-    func test_heartbeat_revokedFalse() async throws {
+    func test_heartbeat_revokedFalse() async {
         URLProtocolStub.responder = { _ in
             (HTTPURLResponse(statusCode: 200), Data(#"{"revoked":false}"#.utf8))
         }
@@ -109,7 +109,7 @@ private final class URLProtocolStub: URLProtocol {
     static var responder: (@Sendable (URLRequest) throws -> Response)?
     static func reset() { responder = nil }
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canInit(with _: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         guard let responder = URLProtocolStub.responder else {
@@ -125,6 +125,7 @@ private final class URLProtocolStub: URLProtocol {
             client?.urlProtocol(self, didFailWithError: error)
         }
     }
+
     override func stopLoading() {}
 }
 

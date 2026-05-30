@@ -1,5 +1,5 @@
-import XCTest
 @testable import DevTrayCore
+import XCTest
 
 final class TrialTrackerTests: XCTestCase {
     private var kc: InMemoryKeychain!
@@ -70,14 +70,14 @@ final class TrialTrackerTests: XCTestCase {
 
     func test_detectClockSetback_recordedThenBackwardOver1h_returnsTrue() async throws {
         try await tracker.recordLastSeen()
-        nowBox.value = nowBox.value.addingTimeInterval(-3601)  // 1h + 1s backward
+        nowBox.value = nowBox.value.addingTimeInterval(-3601) // 1h + 1s backward
         let setback = try await tracker.detectClockSetback()
         XCTAssertTrue(setback)
     }
 
     func test_detectClockSetback_recordedThenBackwardUnder1h_returnsFalse() async throws {
         try await tracker.recordLastSeen()
-        nowBox.value = nowBox.value.addingTimeInterval(-1800)  // 30 min backward (grace)
+        nowBox.value = nowBox.value.addingTimeInterval(-1800) // 30 min backward (grace)
         let setback = try await tracker.detectClockSetback()
         XCTAssertFalse(setback)
     }

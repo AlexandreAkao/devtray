@@ -1,7 +1,7 @@
-import Foundation
 import Combine
 import DevTrayCore
 import DevTrayUI
+import Foundation
 
 /// Owns the periodic heartbeat Timer and exposes a published LicenseState.
 /// Subscribes to `.licenseStateNeedsRefresh` notifications (posted by LicenseTab on activate/deactivate).
@@ -52,7 +52,7 @@ final class LicenseCoordinator: ObservableObject {
             return
         }
         // 2. Otherwise trial logic.
-        let setback = (try? await tracker.detectClockSetback()) ?? false
+        let setback = await (try? tracker.detectClockSetback()) ?? false
         if setback { state = .trialExpired; return }
         guard let status = try? await tracker.currentStatus() else {
             state = .untrialed

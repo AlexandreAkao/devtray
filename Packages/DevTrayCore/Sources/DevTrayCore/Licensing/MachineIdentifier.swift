@@ -1,9 +1,9 @@
-import Foundation
 import CryptoKit
+import Foundation
 import IOKit
 
 public enum MachineIdentifierError: Error, Equatable {
-    case unavailable  // IOKit query returned nil or threw
+    case unavailable // IOKit query returned nil or threw
 }
 
 /// Injectable IOPlatformUUID reader. Production uses `IOKitMachineIDProvider`;
