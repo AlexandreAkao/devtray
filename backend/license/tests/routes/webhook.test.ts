@@ -36,6 +36,22 @@ function refundedPayload(opts: { event_id: string; order_id: string; test_mode?:
   });
 }
 
+/** Real LS payload shape: webhook_id (per-delivery) + NO event_id. Idempotency
+ * key is derived from event_name + data.id by the handler. */
+function lsRealPayload(opts: { webhook_id: string; email: string; order_id: string; test_mode?: boolean }) {
+  return JSON.stringify({
+    meta: {
+      event_name: "order_created",
+      webhook_id: opts.webhook_id,
+      test_mode: opts.test_mode ?? false,
+    },
+    data: {
+      id: opts.order_id,
+      attributes: { user_email: opts.email },
+    },
+  });
+}
+
 describe("routes/webhook", () => {
   let priv: Uint8Array;
 
@@ -106,6 +122,30 @@ describe("routes/webhook", () => {
     await handleWebhook(req, env as any, stubbed.impl);
     const testKeys = await env.LICENSES_TEST.list();
     expect(testKeys.keys.length).toBeGreaterThan(0);
+  });
+
+  it("accepts real LS payload shape (webhook_id, no event_id) — derives event key from event_name+data.id", async () => {
+    const orderId = "o-real-ls-001";
+    const body = lsRealPayload({
+      webhook_id: "wh-delivery-1", email: "real@ls.com", order_id: orderId, test_mode: true,
+    });
+    const sig = sign(body, WEBHOOK_SECRET);
+    const stub = makeStubFetch();
+    const res = await handleWebhook(new Request("http://w/webhook", {
+      method: "POST", body, headers: { "X-Signature": sig }
+    }), env as any, stub.impl);
+    expect(res.status).toBe(200);
+    expect(stub.calls.length).toBe(1);  // Resend was called → mint succeeded
+
+    // Replay with DIFFERENT webhook_id (per-delivery retry) but same order → MUST be idempotent
+    const replayBody = lsRealPayload({
+      webhook_id: "wh-delivery-2", email: "real@ls.com", order_id: orderId, test_mode: true,
+    });
+    const replaySig = sign(replayBody, WEBHOOK_SECRET);
+    await handleWebhook(new Request("http://w/webhook", {
+      method: "POST", body: replayBody, headers: { "X-Signature": replaySig }
+    }), env as any, stub.impl);
+    expect(stub.calls.length).toBe(1);  // STILL 1 — derived event key blocked duplicate mint
   });
 
   it("order_refunded marks revoked=true", async () => {

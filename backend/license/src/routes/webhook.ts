@@ -9,7 +9,11 @@ type FetchImpl = typeof fetch;
 type LSEvent = {
   meta: {
     event_name: "order_created" | "order_refunded" | string;
-    event_id: string;
+    // LS payloads use `webhook_id` (per-delivery, not stable across retries). Some
+    // synthetic tests still pass `event_id`; we prefer it when present, otherwise
+    // derive a stable idempotency key from event_name + data.id.
+    event_id?: string;
+    webhook_id?: string;
     test_mode: boolean;
   };
   data: {
@@ -37,8 +41,13 @@ export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl
     return new Response("malformed json", { status: 400 });
   }
 
-  const eventId = event.meta?.event_id;
-  if (!eventId) return new Response("missing event_id", { status: 400 });
+  // Derive a stable idempotency key. LS retries reuse the same event_name + data.id
+  // but get a fresh webhook_id per attempt, so webhook_id is NOT safe for idempotency.
+  const eventId = event.meta?.event_id
+    ?? (event.meta?.event_name && event.data?.id
+        ? `${event.meta.event_name}:${event.data.id}`
+        : null);
+  if (!eventId) return new Response("missing event identifier", { status: 400 });
 
   if (await wasEventProcessed(env, eventId)) {
     console.log(`[webhook] skip duplicate event_id=${eventId}`);
