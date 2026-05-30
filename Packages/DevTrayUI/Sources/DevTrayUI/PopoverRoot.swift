@@ -25,6 +25,7 @@ public struct PopoverRoot: View {
 
     public var body: some View {
         VStack(spacing: 0) {
+            TrialBanner()
             header
             Divider()
             HStack(spacing: 0) {
