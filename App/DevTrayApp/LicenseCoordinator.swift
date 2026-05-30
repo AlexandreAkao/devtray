@@ -73,7 +73,7 @@ final class LicenseCoordinator: ObservableObject {
         guard let validator else { return }
         guard let claims = try? validator.verify(rawKey) else { return }
         guard let machineHash = try? MachineIdentifier.hash(for: claims.licenseUUID) else { return }
-        guard let resp = try? await client.activate(licenseUUID: claims.licenseUUID, machineHash: machineHash),
+        guard let resp = try? await client.activate(licenseJWT: rawKey, machineHash: machineHash),
               resp.ok else { return }
         try? await store.storeLicense(rawKey, claims: claims, machineHash: machineHash)
         await refresh()

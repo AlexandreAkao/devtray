@@ -36,9 +36,11 @@ public actor LicenseClient: ObservableObject {
         self.encoder = enc
     }
 
-    public func activate(licenseUUID: UUID, machineHash: String) async throws -> ActivationResponse {
+    /// Posts the full JWT (not just the UUID) so the backend can re-verify the signature
+    /// server-side — anti-fraud guard against arbitrary UUID claims.
+    public func activate(licenseJWT: String, machineHash: String) async throws -> ActivationResponse {
         let req = try makePOST(path: "/activate",
-                               body: ActivateRequest(licenseUuid: licenseUUID, machineHash: machineHash),
+                               body: ActivateRequest(licenseJwt: licenseJWT, machineHash: machineHash),
                                timeout: activationTimeout)
         let (data, resp) = try await sendOrTransport(req)
         let http = resp as! HTTPURLResponse
@@ -58,9 +60,9 @@ public actor LicenseClient: ObservableObject {
         }
     }
 
-    public func deactivate(licenseUUID: UUID, machineHash: String) async throws {
+    public func deactivate(licenseJWT: String, machineHash: String) async throws {
         let req = try makePOST(path: "/deactivate",
-                               body: ActivateRequest(licenseUuid: licenseUUID, machineHash: machineHash),
+                               body: ActivateRequest(licenseJwt: licenseJWT, machineHash: machineHash),
                                timeout: activationTimeout)
         let (_, resp) = try await sendOrTransport(req)
         let http = resp as! HTTPURLResponse
@@ -100,7 +102,7 @@ public actor LicenseClient: ObservableObject {
     // MARK: - Private
 
     private struct ActivateRequest: Codable {
-        let licenseUuid: UUID
+        let licenseJwt: String   // snake_case encoder produces "license_jwt" on the wire
         let machineHash: String
     }
 

@@ -4,6 +4,7 @@ import XCTest
 final class LicenseClientTests: XCTestCase {
     private var client: LicenseClient!
     private let licenseUUID = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
+    private let licenseJWT = "DT1-fake.test.signature"
     private let machineHash = "abc123"
 
     override func setUp() {
@@ -20,7 +21,7 @@ final class LicenseClientTests: XCTestCase {
             let body = #"{"ok":true,"activations_remaining":2}"#
             return (HTTPURLResponse(statusCode: 200), Data(body.utf8))
         }
-        let resp = try await client.activate(licenseUUID: licenseUUID, machineHash: machineHash)
+        let resp = try await client.activate(licenseJWT: licenseJWT, machineHash: machineHash)
         XCTAssertTrue(resp.ok)
         XCTAssertEqual(resp.activationsRemaining, 2)
     }
@@ -31,7 +32,7 @@ final class LicenseClientTests: XCTestCase {
             return (HTTPURLResponse(statusCode: 403), Data(body.utf8))
         }
         do {
-            _ = try await client.activate(licenseUUID: licenseUUID, machineHash: machineHash)
+            _ = try await client.activate(licenseJWT: licenseJWT, machineHash: machineHash)
             XCTFail("expected throw")
         } catch let LicenseClientError.activationFailed(reason) {
             XCTAssertEqual(reason, "too_many_activations")
@@ -43,7 +44,7 @@ final class LicenseClientTests: XCTestCase {
     func test_activate_404_throwsLicenseNotFound() async {
         URLProtocolStub.responder = { _ in (HTTPURLResponse(statusCode: 404), Data()) }
         do {
-            _ = try await client.activate(licenseUUID: licenseUUID, machineHash: machineHash)
+            _ = try await client.activate(licenseJWT: licenseJWT, machineHash: machineHash)
             XCTFail()
         } catch LicenseClientError.licenseNotFound {
             // expected
@@ -56,7 +57,7 @@ final class LicenseClientTests: XCTestCase {
         URLProtocolStub.responder = { _ in
             (HTTPURLResponse(statusCode: 200), Data(#"{"ok":true}"#.utf8))
         }
-        try await client.deactivate(licenseUUID: licenseUUID, machineHash: machineHash)
+        try await client.deactivate(licenseJWT: licenseJWT, machineHash: machineHash)
     }
 
     func test_heartbeat_revokedTrue() async {
@@ -95,10 +96,10 @@ final class LicenseClientTests: XCTestCase {
             capturedBody = req.httpBodyOrBodyStream()
             return (HTTPURLResponse(statusCode: 200), Data(#"{"ok":true,"activations_remaining":1}"#.utf8))
         }
-        _ = try await client.activate(licenseUUID: licenseUUID, machineHash: "xyz")
+        _ = try await client.activate(licenseJWT: licenseJWT, machineHash: "xyz")
         let json = try XCTUnwrap(capturedBody.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] })
         XCTAssertEqual(json["machine_hash"] as? String, "xyz")
-        XCTAssertEqual(json["license_uuid"] as? String, licenseUUID.uuidString)
+        XCTAssertEqual(json["license_jwt"] as? String, licenseJWT)
     }
 }
 

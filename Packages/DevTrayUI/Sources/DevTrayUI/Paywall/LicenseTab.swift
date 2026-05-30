@@ -114,7 +114,7 @@ public struct LicenseTab: View {
             let validator = try LicenseValidator()
             let claims = try validator.verify(key)
             let machineHash = try MachineIdentifier.hash(for: claims.licenseUUID)
-            let resp = try await licenseClient.activate(licenseUUID: claims.licenseUUID,
+            let resp = try await licenseClient.activate(licenseJWT: key,
                                                         machineHash: machineHash)
             guard resp.ok else { throw LicenseClientError.activationFailed(reason: "server_rejected") }
             try await licenseStore.storeLicense(key, claims: claims, machineHash: machineHash)
@@ -139,7 +139,7 @@ public struct LicenseTab: View {
         status = .working
         do {
             guard let stored = try await licenseStore.storedLicense() else { return }
-            try await licenseClient.deactivate(licenseUUID: stored.claims.licenseUUID,
+            try await licenseClient.deactivate(licenseJWT: stored.jwt,
                                                machineHash: stored.machineHash)
             try await licenseStore.clearLicense()
             status = .ok
