@@ -76,7 +76,7 @@ struct DevTrayApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("DevTray", systemImage: "wrench.adjustable") {
+        MenuBarExtra("DevTray", systemImage: "tray.full.fill") {
             PopoverRoot(
                 onCheckForUpdates: { updater.checkForUpdates() },
                 canCheckForUpdates: updater.canCheckForUpdates
@@ -306,7 +306,7 @@ private struct AboutTab: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "wrench.adjustable")
+            Image(systemName: "tray.full.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.tint)
             Text("DevTray")
