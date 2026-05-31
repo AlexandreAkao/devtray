@@ -94,8 +94,12 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
   try {
     await sendLicenseEmail({ apiKey: env.RESEND_API_KEY, to: email, licenseKey: token, fetchImpl });
   } catch (err) {
+    // markEventProcessed already fired above, so Paddle's retry hits the
+    // duplicate guard and short-circuits — the email is NOT re-sent automatically.
+    // The license IS persisted in KV; only delivery failed. Recovery requires
+    // a manual re-send from the support@ inbox using the logged license uuid.
     console.error(`[webhook] email delivery failed license=${licenseUuid} txn=${transactionId} email=${email}`, err);
-    throw err; // let Paddle retry (license already persisted; sendLicenseEmail is the only failure path)
+    throw err;
   }
 
   console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} test_mode=${testMode}`);
