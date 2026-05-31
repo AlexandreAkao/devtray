@@ -28,7 +28,7 @@ describe("routes/deactivate", () => {
         { machine_hash: "hA", activated_at: 1 },
         { machine_hash: "hB", activated_at: 2 },
       ],
-      revoked: false, test_mode: false, ls_order_id: "o1",
+      revoked: false, test_mode: false, paddle_transaction_id: "o1",
     };
     await putLicense(env as any, licenseUuid, record);
   });

@@ -17,7 +17,7 @@ describe("routes/admin", () => {
         { machine_hash: "h2", activated_at: 2 },
         { machine_hash: "h3", activated_at: 3 },
       ],
-      revoked: false, test_mode: false, ls_order_id: "o1",
+      revoked: false, test_mode: false, paddle_transaction_id: "o1",
     };
     await putLicense(env as any, licenseUuid, rec);
   });

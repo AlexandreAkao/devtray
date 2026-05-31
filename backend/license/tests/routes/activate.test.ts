@@ -29,7 +29,7 @@ describe("routes/activate", () => {
       activations: [],
       revoked: false,
       test_mode: false,
-      ls_order_id: "o1",
+      paddle_transaction_id: "o1",
     };
     await putLicense(env as any, licenseUuid, record);
   });
