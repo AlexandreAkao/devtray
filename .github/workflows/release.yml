@@ -145,13 +145,68 @@ jobs:
           xcrun stapler staple "$APP_PATH"
           xcrun stapler validate "$APP_PATH"
 
-      - name: Zip stapled app (final shipping artifact)
-        id: zip
+      - name: Install librsvg + create-dmg
         run: |
-          ZIP="DevTray-${{ steps.ver.outputs.short }}.zip"
-          ditto -c -k --keepParent "$APP_PATH" "$ZIP"
-          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
-          echo "length=$(stat -f%z "$ZIP")" >> "$GITHUB_OUTPUT"
+          brew install librsvg create-dmg
+
+      - name: Render DMG background PNG from SVG
+        run: |
+          rsvg-convert -w 540 -h 380 Resources/dmg-background.svg -o dmg-background.png
+          ls -la dmg-background.png
+
+      - name: Build DMG (final shipping artifact)
+        id: dmg
+        run: |
+          DMG="DevTray-${{ steps.ver.outputs.short }}.dmg"
+          create-dmg \
+            --background dmg-background.png \
+            --window-size 540 380 \
+            --icon-size 100 \
+            --icon "DevTray.app" 130 190 \
+            --app-drop-link 400 190 \
+            --hide-extension "DevTray.app" \
+            --volname "DevTray ${{ steps.ver.outputs.short }}" \
+            --no-internet-enable \
+            "$DMG" \
+            "$APP_PATH"
+          echo "dmg=$DMG" >> "$GITHUB_OUTPUT"
+          echo "length=$(stat -f%z "$DMG")" >> "$GITHUB_OUTPUT"
+
+      - name: Sign the DMG
+        run: |
+          codesign --force --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            --keychain "$KEYCHAIN_PATH" \
+            "${{ steps.dmg.outputs.dmg }}"
+          codesign --verify --verbose=2 "${{ steps.dmg.outputs.dmg }}"
+
+      - name: Notarize the DMG
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          ISSUER: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -e
+          SUBMISSION_JSON=$(xcrun notarytool submit \
+            "${{ steps.dmg.outputs.dmg }}" \
+            --key /tmp/key.p8 \
+            --key-id "$KEY_ID" \
+            --issuer "$ISSUER" \
+            --wait \
+            --output-format json)
+          echo "$SUBMISSION_JSON"
+          STATUS=$(echo "$SUBMISSION_JSON" | jq -r '.status')
+          SUBMISSION_ID=$(echo "$SUBMISSION_JSON" | jq -r '.id')
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "::error::DMG notarization failed: status=$STATUS, submission=$SUBMISSION_ID"
+            xcrun notarytool log "$SUBMISSION_ID" --key /tmp/key.p8 --key-id "$KEY_ID" --issuer "$ISSUER"
+            exit 1
+          fi
+
+      - name: Staple ticket to the DMG
+        run: |
+          xcrun stapler staple "${{ steps.dmg.outputs.dmg }}"
+          xcrun stapler validate "${{ steps.dmg.outputs.dmg }}"
+          spctl --assess --type install --verbose "${{ steps.dmg.outputs.dmg }}" || true
 
       - name: Download Sparkle tools
         run: |
@@ -171,7 +226,7 @@ jobs:
           KEYFILE="$(mktemp)"
           trap 'rm -f "$KEYFILE"' EXIT
           printf '%s' "$SPARKLE_PRIVATE_KEY" > "$KEYFILE"
-          OUT=$("$SIGN_UPDATE" -f "$KEYFILE" "${{ steps.zip.outputs.zip }}")
+          OUT=$("$SIGN_UPDATE" -f "$KEYFILE" "${{ steps.dmg.outputs.dmg }}")
           echo "sign_update: $OUT"
           SIG=$(echo "$OUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
           if [ -z "$SIG" ]; then echo "::error::failed to parse edSignature"; exit 1; fi
@@ -182,7 +237,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            "${{ steps.zip.outputs.zip }}" \
+            "${{ steps.dmg.outputs.dmg }}" \
             --title "${{ steps.ver.outputs.short }}" \
             --generate-notes
 
@@ -194,13 +249,13 @@ jobs:
           # The zip is an untracked file in the workspace root; `git checkout main`
           # only touches tracked files, so it survives the branch switch.
           git checkout main
-          URL="https://github.com/AlexandreAkao/devtray/releases/download/${GITHUB_REF_NAME}/${{ steps.zip.outputs.zip }}"
+          URL="https://github.com/AlexandreAkao/devtray/releases/download/${GITHUB_REF_NAME}/${{ steps.dmg.outputs.dmg }}"
           ./scripts/appcast.sh \
             "${{ steps.ver.outputs.short }}" \
             "${{ steps.ver.outputs.build }}" \
             "$URL" \
             "${{ steps.sign.outputs.sig }}" \
-            "${{ steps.zip.outputs.length }}"
+            "${{ steps.dmg.outputs.length }}"
           git add docs/appcast.xml
           git commit -m "chore(release): appcast ${GITHUB_REF_NAME}" || { echo "no appcast change"; exit 0; }
           # Rebase-and-retry once in case main advanced (e.g. a re-run or concurrent tag).
