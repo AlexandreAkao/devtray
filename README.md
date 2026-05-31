@@ -32,7 +32,7 @@ A menubar app. Hit `⌘⇧.` (default shortcut) to open a Spotlight-style launch
 
 Download the latest DMG from the [Releases page](https://github.com/AlexandreAkao/devtray/releases/latest), open it, drag DevTray to Applications, and launch.
 
-Requirements: macOS 13 (Ventura) or later. Apple Silicon or Intel.
+Requirements: macOS 14 (Sonoma) or later. Apple Silicon or Intel.
 
 ## Buy
 
