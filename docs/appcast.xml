@@ -7,6 +7,14 @@
     <language>en</language>
     <!-- BEGIN ITEMS -->
     <item>
+      <title>0.11.0</title>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>0.11.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Sun, 31 May 2026 16:21:08 +0000</pubDate>
+      <enclosure url="https://github.com/AlexandreAkao/devtray/releases/download/v0.11.0/DevTray-0.11.0.zip" sparkle:edSignature="M4lIoKMoGrWpRxwJJHOYwu/uV6avElP4vaC1LhAaeqp5u9ZBIEb+e5dsnsKhgqEx+wiQ5FVVcg3HqBdAlfA2Aw==" length="5077519" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>0.10.0</title>
       <sparkle:version>10</sparkle:version>
       <sparkle:shortVersionString>0.10.0</sparkle:shortVersionString>
