@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="380" viewBox="0 0 540 380">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6f6f8"/>
+      <stop offset="100%" stop-color="#e2e2e6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="540" height="380" fill="url(#bg)"/>
+
+  <!-- subtle horizontal line under the title -->
+  <line x1="60" y1="78" x2="480" y2="78" stroke="#cfcfd4" stroke-width="1"/>
+
+  <!-- title -->
+  <text x="270" y="58" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="22" font-weight="600" fill="#2c2c34">
+    Welcome to DevTray
+  </text>
+
+  <!-- centered arrow between the two icon positions (~265, ~190) -->
+  <g transform="translate(225,184)" stroke="#7a7a83" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="0" y1="6" x2="90" y2="6"/>
+    <polyline points="74,-6 90,6 74,18"/>
+  </g>
+
+  <!-- footer hint -->
+  <text x="270" y="310" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" font-size="13" fill="#6a6a72">
+    Drag DevTray to Applications
+  </text>
+</svg>
