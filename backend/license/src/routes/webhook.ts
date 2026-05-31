@@ -91,7 +91,12 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
   await putLicense(env, licenseUuid, record);
   await markEventProcessed(env, eventId, "minted");
 
-  await sendLicenseEmail({ apiKey: env.RESEND_API_KEY, to: email, licenseKey: token, fetchImpl });
+  try {
+    await sendLicenseEmail({ apiKey: env.RESEND_API_KEY, to: email, licenseKey: token, fetchImpl });
+  } catch (err) {
+    console.error(`[webhook] email delivery failed license=${licenseUuid} txn=${transactionId} email=${email}`, err);
+    throw err; // let Paddle retry (license already persisted; sendLicenseEmail is the only failure path)
+  }
 
   console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} test_mode=${testMode}`);
   return new Response("ok", { status: 200 });
@@ -103,6 +108,12 @@ async function revokeByTransactionId(event: PaddleEvent, env: Env, eventId: stri
   const ns = licenseNamespace(env, testMode);
 
   const list = await ns.list();
+  // CF KV list() returns ≤1000 keys per call. At v1.0-era scale (hundreds of
+  // licenses) this is safe. If the project scales past 1000 active licenses,
+  // migrate to cursor-based pagination before this becomes a silent miss.
+  if (list.list_complete === false) {
+    console.warn(`[webhook] KV list truncated — refund scan may miss records txn=${transactionId}`);
+  }
   for (const key of list.keys) {
     const rec = (await ns.get(key.name, "json")) as LicenseRecord | null;
     if (rec && (rec.paddle_transaction_id === transactionId || rec.ls_order_id === transactionId)) {
