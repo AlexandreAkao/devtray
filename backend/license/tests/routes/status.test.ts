@@ -11,7 +11,7 @@ describe("routes/status", () => {
     const rec: LicenseRecord = {
       user_email: "a@b.com", created_at: 1,
       activations: [{ machine_hash: "hX", activated_at: 1 }],
-      revoked: false, test_mode: false, ls_order_id: "o",
+      revoked: false, test_mode: false, paddle_transaction_id: "o",
     };
     await putLicense(env as any, licenseUuid, rec);
   });

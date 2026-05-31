@@ -15,7 +15,7 @@ const fixture = (overrides: Partial<LicenseRecord> = {}): LicenseRecord => ({
   activations: [],
   revoked: false,
   test_mode: false,
-  ls_order_id: "order_xxx",
+  paddle_transaction_id: "order_xxx",
   ...overrides,
 });
 
