@@ -9,7 +9,11 @@ export type LicenseRecord = {
   activations: Activation[];
   revoked: boolean;
   test_mode: boolean;
-  ls_order_id: string;
+  // Paddle is the active provider going forward.
+  paddle_transaction_id?: string;
+  // Read-only fallback for v0.11-era records minted under LemonSqueezy.
+  // Removed in v1.0.1 once production KV has zero ls_order_id records.
+  ls_order_id?: string;
 };
 
 export type EventRecord = {
@@ -22,7 +26,8 @@ export type Env = {
   LICENSES_TEST: KVNamespace;
   EVENTS: KVNamespace;
   LICENSE_PRIVATE_KEY: string;
-  LEMONSQUEEZY_WEBHOOK_SECRET: string;
+  PADDLE_NOTIFICATION_SECRET: string;
+  PADDLE_MAGIC_LINK_URL: string;
   RESEND_API_KEY: string;
   ADMIN_TOKEN: string;
   LICENSE_ISS: string;
