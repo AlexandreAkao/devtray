@@ -8,171 +8,60 @@ import { handleWebhook } from "../../src/routes/webhook";
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
-const WEBHOOK_SECRET = "ls-secret";
+const SECRET = "pdl_ntfset_test_secret";
 
-function sign(body: string, secret: string): string {
-  const tag = hmac(sha256, new TextEncoder().encode(secret), new TextEncoder().encode(body));
+function paddleSign(ts: number, body: string, secret: string): string {
+  const tag = hmac(sha256, new TextEncoder().encode(secret), new TextEncoder().encode(`${ts}:${body}`));
   return Array.from(tag).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function orderCreatedPayload(opts: { event_id: string; email: string; order_id: string; test_mode?: boolean }) {
+function paddleHeader(body: string, secret: string, tsOverride?: number): string {
+  const ts = tsOverride ?? Math.floor(Date.now() / 1000);
+  return `ts=${ts};h1=${paddleSign(ts, body, secret)}`;
+}
+
+function transactionCompletedPayload(opts: {
+  event_id: string;
+  email: string;
+  transaction_id: string;
+  sandbox?: boolean;
+}) {
   return JSON.stringify({
-    meta: {
-      event_name: "order_created",
-      event_id: opts.event_id,
-      test_mode: opts.test_mode ?? false,
-    },
+    event_id: opts.event_id,
+    event_type: "transaction.completed",
+    occurred_at: "2026-05-31T19:00:00Z",
+    notification_id: `ntf_${opts.event_id}`,
     data: {
-      id: opts.order_id,
-      attributes: { user_email: opts.email },
+      id: opts.transaction_id,
+      status: "completed",
+      customer: { id: "ctm_x", email: opts.email },
+      items: [{ price: { id: "pri_x", product_id: "pro_x" } }],
+      details: { totals: { total: "1900", currency_code: "USD" } },
+      origin: opts.sandbox ? "sandbox" : "production",
     },
   });
 }
 
-function refundedPayload(opts: { event_id: string; order_id: string; test_mode?: boolean }) {
+function transactionRefundedPayload(opts: {
+  event_id: string;
+  transaction_id: string;
+  sandbox?: boolean;
+}) {
   return JSON.stringify({
-    meta: { event_name: "order_refunded", event_id: opts.event_id, test_mode: opts.test_mode ?? false },
-    data: { id: opts.order_id, attributes: {} },
-  });
-}
-
-/** Real LS payload shape: webhook_id (per-delivery) + NO event_id. Idempotency
- * key is derived from event_name + data.id by the handler. */
-function lsRealPayload(opts: { webhook_id: string; email: string; order_id: string; test_mode?: boolean }) {
-  return JSON.stringify({
-    meta: {
-      event_name: "order_created",
-      webhook_id: opts.webhook_id,
-      test_mode: opts.test_mode ?? false,
-    },
+    event_id: opts.event_id,
+    event_type: "transaction.refunded",
+    occurred_at: "2026-05-31T19:30:00Z",
+    notification_id: `ntf_${opts.event_id}`,
     data: {
-      id: opts.order_id,
-      attributes: { user_email: opts.email },
+      id: opts.transaction_id,
+      status: "refunded",
+      customer: { id: "ctm_x", email: "buyer@x.com" },
+      items: [],
+      details: { totals: { total: "1900", currency_code: "USD" } },
+      origin: opts.sandbox ? "sandbox" : "production",
     },
   });
 }
-
-describe("routes/webhook", () => {
-  let priv: Uint8Array;
-
-  beforeAll(async () => {
-    priv = ed.utils.randomPrivateKey();
-    (env as any).LICENSE_PRIVATE_KEY = btoa(String.fromCharCode(...priv));
-    (env as any).LEMONSQUEEZY_WEBHOOK_SECRET = WEBHOOK_SECRET;
-    (env as any).RESEND_API_KEY = "re_test";
-    (env as any).LICENSE_ISS = "api.devtray.app";
-  });
-
-  it("401 on missing signature", async () => {
-    const body = orderCreatedPayload({ event_id: "ev1", email: "a@b.com", order_id: "o1" });
-    const req = new Request("http://w/webhook", { method: "POST", body, headers: {} });
-    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
-    expect(res.status).toBe(401);
-  });
-
-  it("401 on wrong signature", async () => {
-    const body = orderCreatedPayload({ event_id: "ev2", email: "a@b.com", order_id: "o2" });
-    const req = new Request("http://w/webhook", {
-      method: "POST", body,
-      headers: { "X-Signature": "deadbeef" }
-    });
-    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
-    expect(res.status).toBe(401);
-  });
-
-  it("200 + mints license on order_created", async () => {
-    const body = orderCreatedPayload({ event_id: "ev3", email: "buyer@x.com", order_id: "o3" });
-    const sig = sign(body, WEBHOOK_SECRET);
-    const stubbed = makeStubFetch();
-    const req = new Request("http://w/webhook", {
-      method: "POST", body, headers: { "X-Signature": sig }
-    });
-    const res = await handleWebhook(req, env as any, stubbed.impl);
-    expect(res.status).toBe(200);
-    expect(stubbed.calls.length).toBe(1);
-    expect(stubbed.calls[0]!.url).toContain("resend.com");
-
-    // KV has a license now:
-    const keys = await env.LICENSES.list();
-    expect(keys.keys.length).toBeGreaterThan(0);
-  });
-
-  it("idempotent — same event_id is a no-op on second call", async () => {
-    const body = orderCreatedPayload({ event_id: "ev-dup", email: "x@x.com", order_id: "o-dup" });
-    const sig = sign(body, WEBHOOK_SECRET);
-    const stubbed = makeStubFetch();
-    const make = () => new Request("http://w/webhook", {
-      method: "POST", body, headers: { "X-Signature": sig }
-    });
-    await handleWebhook(make(), env as any, stubbed.impl);
-    await handleWebhook(make(), env as any, stubbed.impl);
-    // Email sent only once:
-    expect(stubbed.calls.length).toBe(1);
-  });
-
-  it("test_mode routes to LICENSES_TEST", async () => {
-    const body = orderCreatedPayload({
-      event_id: "ev-test", email: "test@x.com", order_id: "o-test", test_mode: true
-    });
-    const sig = sign(body, WEBHOOK_SECRET);
-    const stubbed = makeStubFetch();
-    const req = new Request("http://w/webhook", {
-      method: "POST", body, headers: { "X-Signature": sig }
-    });
-    await handleWebhook(req, env as any, stubbed.impl);
-    const testKeys = await env.LICENSES_TEST.list();
-    expect(testKeys.keys.length).toBeGreaterThan(0);
-  });
-
-  it("accepts real LS payload shape (webhook_id, no event_id) — derives event key from event_name+data.id", async () => {
-    const orderId = "o-real-ls-001";
-    const body = lsRealPayload({
-      webhook_id: "wh-delivery-1", email: "real@ls.com", order_id: orderId, test_mode: true,
-    });
-    const sig = sign(body, WEBHOOK_SECRET);
-    const stub = makeStubFetch();
-    const res = await handleWebhook(new Request("http://w/webhook", {
-      method: "POST", body, headers: { "X-Signature": sig }
-    }), env as any, stub.impl);
-    expect(res.status).toBe(200);
-    expect(stub.calls.length).toBe(1);  // Resend was called → mint succeeded
-
-    // Replay with DIFFERENT webhook_id (per-delivery retry) but same order → MUST be idempotent
-    const replayBody = lsRealPayload({
-      webhook_id: "wh-delivery-2", email: "real@ls.com", order_id: orderId, test_mode: true,
-    });
-    const replaySig = sign(replayBody, WEBHOOK_SECRET);
-    await handleWebhook(new Request("http://w/webhook", {
-      method: "POST", body: replayBody, headers: { "X-Signature": replaySig }
-    }), env as any, stub.impl);
-    expect(stub.calls.length).toBe(1);  // STILL 1 — derived event key blocked duplicate mint
-  });
-
-  it("order_refunded marks revoked=true", async () => {
-    // First, mint a license:
-    const orderId = "o-refund-1";
-    const createBody = orderCreatedPayload({ event_id: "ev-mint", email: "a@b.com", order_id: orderId });
-    const createSig = sign(createBody, WEBHOOK_SECRET);
-    const stub = makeStubFetch();
-    await handleWebhook(new Request("http://w/webhook", {
-      method: "POST", body: createBody, headers: { "X-Signature": createSig }
-    }), env as any, stub.impl);
-
-    // Then refund it:
-    const refundBody = refundedPayload({ event_id: "ev-refund", order_id: orderId });
-    const refundSig = sign(refundBody, WEBHOOK_SECRET);
-    await handleWebhook(new Request("http://w/webhook", {
-      method: "POST", body: refundBody, headers: { "X-Signature": refundSig }
-    }), env as any, stub.impl);
-
-    const keys = await env.LICENSES.list();
-    const matches = await Promise.all(
-      keys.keys.map((k: { name: string }) => env.LICENSES.get(k.name, "json") as Promise<{ ls_order_id: string; revoked: boolean }>)
-    );
-    const refunded = matches.find((r: { ls_order_id: string; revoked: boolean }) => r.ls_order_id === orderId);
-    expect(refunded?.revoked).toBe(true);
-  });
-});
 
 function makeStubFetch() {
   const calls: Array<{ url: string; init: RequestInit }> = [];
@@ -182,3 +71,200 @@ function makeStubFetch() {
   };
   return { calls, impl };
 }
+
+describe("routes/webhook (Paddle)", () => {
+  let priv: Uint8Array;
+
+  beforeAll(async () => {
+    priv = ed.utils.randomPrivateKey();
+    (env as any).LICENSE_PRIVATE_KEY = btoa(String.fromCharCode(...priv));
+    (env as any).PADDLE_NOTIFICATION_SECRET = SECRET;
+    (env as any).RESEND_API_KEY = "re_test";
+    (env as any).LICENSE_ISS = "api.devtray.app";
+  });
+
+  it("401 on missing signature header", async () => {
+    const body = transactionCompletedPayload({ event_id: "evt_1", email: "a@b.com", transaction_id: "txn_1" });
+    const req = new Request("http://w/webhook", { method: "POST", body, headers: {} });
+    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
+    expect(res.status).toBe(401);
+  });
+
+  it("401 on wrong signature", async () => {
+    const body = transactionCompletedPayload({ event_id: "evt_2", email: "a@b.com", transaction_id: "txn_2" });
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": "ts=1717000000;h1=deadbeef" },
+    });
+    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
+    expect(res.status).toBe(401);
+  });
+
+  it("400 on malformed JSON", async () => {
+    const body = "not-json{";
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
+    expect(res.status).toBe(400);
+  });
+
+  it("400 on missing event_id", async () => {
+    const body = JSON.stringify({ event_type: "transaction.completed", data: { id: "x" } });
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
+    expect(res.status).toBe(400);
+  });
+
+  it("400 on missing customer email", async () => {
+    const body = JSON.stringify({
+      event_id: "evt_no_email",
+      event_type: "transaction.completed",
+      data: { id: "txn_x", customer: {}, origin: "production" },
+    });
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, makeStubFetch().impl);
+    expect(res.status).toBe(400);
+  });
+
+  it("200 + mints license on transaction.completed (prod → LICENSES)", async () => {
+    const body = transactionCompletedPayload({ event_id: "evt_3", email: "buyer@x.com", transaction_id: "txn_3" });
+    const stub = makeStubFetch();
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, stub.impl);
+    expect(res.status).toBe(200);
+    expect(stub.calls.length).toBe(1);
+    expect(stub.calls[0]!.url).toContain("resend.com");
+
+    const keys = await env.LICENSES.list();
+    expect(keys.keys.length).toBeGreaterThan(0);
+  });
+
+  it("idempotent — duplicate event_id is a no-op on second call", async () => {
+    const body = transactionCompletedPayload({ event_id: "evt_dup", email: "x@x.com", transaction_id: "txn_dup" });
+    const stub = makeStubFetch();
+    const make = () =>
+      new Request("http://w/webhook", {
+        method: "POST",
+        body,
+        headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+      });
+    await handleWebhook(make(), env as any, stub.impl);
+    await handleWebhook(make(), env as any, stub.impl);
+    expect(stub.calls.length).toBe(1);
+  });
+
+  it("sandbox event routes to LICENSES_TEST", async () => {
+    const body = transactionCompletedPayload({
+      event_id: "evt_sandbox",
+      email: "sandbox@x.com",
+      transaction_id: "txn_sandbox",
+      sandbox: true,
+    });
+    const stub = makeStubFetch();
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    await handleWebhook(req, env as any, stub.impl);
+    const testKeys = await env.LICENSES_TEST.list();
+    expect(testKeys.keys.length).toBeGreaterThan(0);
+  });
+
+  it("transaction.refunded marks matching record revoked=true", async () => {
+    const txnId = "txn_refund_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint", email: "r@b.com", transaction_id: txnId });
+    const stub = makeStubFetch();
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const refundBody = transactionRefundedPayload({ event_id: "evt_refund", transaction_id: txnId });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: refundBody,
+        headers: { "Paddle-Signature": paddleHeader(refundBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const keys = await env.LICENSES.list();
+    const records = await Promise.all(
+      keys.keys.map((k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; ls_order_id?: string; revoked: boolean }>),
+    );
+    const refunded = records.find((r) => r?.paddle_transaction_id === txnId);
+    expect(refunded?.revoked).toBe(true);
+  });
+
+  it("refund matches legacy ls_order_id records (one-cycle transition fallback)", async () => {
+    const orderId = "ord_legacy_1";
+    const legacyUuid = "uuid-legacy-1";
+    await env.LICENSES.put(
+      legacyUuid,
+      JSON.stringify({
+        user_email: "legacy@x.com",
+        created_at: 1_748_500_000,
+        activations: [],
+        revoked: false,
+        test_mode: false,
+        ls_order_id: orderId,
+      }),
+    );
+
+    const refundBody = transactionRefundedPayload({ event_id: "evt_refund_legacy", transaction_id: orderId });
+    const stub = makeStubFetch();
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: refundBody,
+        headers: { "Paddle-Signature": paddleHeader(refundBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const got = await env.LICENSES.get(legacyUuid, "json") as { revoked: boolean } | null;
+    expect(got?.revoked).toBe(true);
+  });
+
+  it("unknown event_type returns 200 (ignored) and marks event processed", async () => {
+    const body = JSON.stringify({
+      event_id: "evt_unknown",
+      event_type: "subscription.created",
+      data: { id: "sub_x" },
+    });
+    const stub = makeStubFetch();
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, stub.impl);
+    expect(res.status).toBe(200);
+    expect(stub.calls.length).toBe(0);
+  });
+});
