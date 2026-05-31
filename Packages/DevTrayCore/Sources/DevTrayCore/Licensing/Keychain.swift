@@ -13,7 +13,21 @@ public enum KeychainError: Error, Equatable {
     case unexpectedStatus(OSStatus)
 }
 
-/// Production wrapper around Security framework. Single service id; one item per account.
+/// **Production storage** — file-backed (not the macOS Keychain) under
+/// `~/Library/Application Support/DevTray/storage/<account>.bin`.
+///
+/// Why not Keychain: macOS legacy Keychain binds each item's ACL to the writing
+/// binary's code-signature (`CodeSignatureAclSubject` w/ `cdhash`). For unsigned
+/// or ad-hoc-signed builds, every rebuild produces a new cdhash → previous
+/// items become unreadable. The `kSecUseDataProtectionKeychain` flag needs an
+/// `application-identifier` entitlement we don't have. File storage works
+/// uniformly across unsigned dev, ad-hoc, and notarized Developer ID builds.
+///
+/// Security posture: each file is mode 0600 inside the user's home — equivalent
+/// privacy to Keychain items for an unsandboxed app (the threat model is "casual
+/// inspection by the user", not "OS-level isolation"). A motivated user can
+/// always reset trial state by deleting the storage directory — this is
+/// acceptable because trial bypass damages only revenue (not security).
 public struct SystemKeychain: KeychainProtocol {
     public let service: String
 
@@ -21,51 +35,38 @@ public struct SystemKeychain: KeychainProtocol {
         self.service = service
     }
 
+    private var storageDirectory: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return appSupport
+            .appendingPathComponent("DevTray", isDirectory: true)
+            .appendingPathComponent(service, isDirectory: true)
+    }
+
+    private func fileURL(for account: String) -> URL {
+        storageDirectory.appendingPathComponent("\(account).bin", isDirectory: false)
+    }
+
     public func set(_ data: Data, account: String) throws {
-        // SecItemUpdate would be more efficient but SecItemAdd + fallback-on-duplicate is simpler.
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
-        let update: [String: Any] = [kSecValueData as String: data]
-        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
-        if updateStatus == errSecSuccess { return }
-        if updateStatus == errSecItemNotFound {
-            var addQuery = query
-            addQuery[kSecValueData as String] = data
-            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
-            guard addStatus == errSecSuccess else { throw KeychainError.unexpectedStatus(addStatus) }
-            return
-        }
-        throw KeychainError.unexpectedStatus(updateStatus)
+        let dir = storageDirectory
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
+                                                attributes: [.posixPermissions: 0o700])
+        let url = fileURL(for: account)
+        // Atomic write so a crash mid-write doesn't leave a half-formed file.
+        try data.write(to: url, options: .atomic)
+        // Restrict file to owner-only — same posture as a Keychain item.
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
 
     public func get(account: String) throws -> Data? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ]
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess else { throw KeychainError.unexpectedStatus(status) }
-        return result as? Data
+        let url = fileURL(for: account)
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return try Data(contentsOf: url)
     }
 
     public func delete(account: String) throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
-        let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainError.unexpectedStatus(status)
-        }
+        let url = fileURL(for: account)
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        try FileManager.default.removeItem(at: url)
     }
 }
 
