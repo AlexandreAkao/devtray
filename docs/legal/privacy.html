@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevTray — Privacy Policy</title>
+<style>
+body{max-width:680px;margin:48px auto;padding:0 24px;font:16px/1.6 system-ui,-apple-system,sans-serif;color:#222}
+h1{font-size:28px}
+h2{font-size:18px;margin-top:24px}
+table{border-collapse:collapse;margin:8px 0;width:100%}
+td,th{padding:8px 12px;border:1px solid #ddd;text-align:left;font-size:14px;vertical-align:top}
+ul{padding-left:20px}
+a{color:#0366d6}
+</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p>Effective date: 2026-05-31. Last updated: 2026-05-31.</p>
+
+<h2>What we collect</h2>
+<table>
+<tr><th>Data</th><th>When</th><th>Why</th></tr>
+<tr><td>Email address</td><td>At checkout</td><td>License delivery</td></tr>
+<tr><td>Hashed machine identifier (SHA-256 of license UUID + IOPlatformUUID, never the raw UUID)</td><td>On license activation and weekly heartbeat</td><td>Enforce 3-machine activation limit</td></tr>
+<tr><td>License JWT (signed token, no personal information inside)</td><td>At activation</td><td>Verify license validity on the app side</td></tr>
+<tr><td>Activation timestamps and revocation status</td><td>On every activation event</td><td>Operate the license system</td></tr>
+</table>
+
+<h2>What we do NOT collect</h2>
+<ul>
+  <li>Your IP address or geolocation (Cloudflare logs are retained 7 days then discarded)</li>
+  <li>The content of your snippets, tools, or any input you process inside DevTray (all local, never sent to a server)</li>
+  <li>Application telemetry, crash reports, or usage analytics</li>
+  <li>Raw IOPlatformUUID (we hash it before sending; the server only sees an opaque hash)</li>
+</ul>
+
+<h2>Where data is stored</h2>
+<ul>
+  <li>Cloudflare KV (Workers infrastructure, US/EU edge nodes)</li>
+  <li>Resend email logs (United States), 90-day retention</li>
+  <li>Paddle.com Market Limited (Merchant of Record) holds checkout and customer data per their privacy policy</li>
+</ul>
+
+<h2>Sharing with third parties</h2>
+<p>We share your email address with <strong>Paddle.com</strong> (Merchant of Record) at checkout and <strong>Resend</strong> (email delivery). We do not sell or share your data with advertisers or data brokers.</p>
+
+<h2>Your rights (GDPR, CCPA, LGPD)</h2>
+<p>You may request access to your data, deletion, or correction by emailing <strong>support@devtray.app</strong>. We respond within 30 days. For full account deletion, we will revoke your license keys, purge the KV record, and delete email logs we control.</p>
+
+<h2>Children</h2>
+<p>DevTray is not directed at users under 13. We do not knowingly collect data from children.</p>
+
+<h2>Changes</h2>
+<p>Material changes to this policy will be posted here with an updated date.</p>
+
+<h2>Contact</h2>
+<p><strong>support@devtray.app</strong></p>
+</body>
+</html>
