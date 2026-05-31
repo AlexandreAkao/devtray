@@ -6,7 +6,7 @@ public struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
 
     /// External URL the "Buy License" CTA opens.
-    public static let buyURL = URL(string: "https://devtray.app/buy")!
+    public static let buyURL = URL(string: "https://api.devtray.app/buy")!
 
     public init() {}
 
