@@ -21,7 +21,8 @@ id = "c090c44d8d2449bfb07f1027a692e21c"
 
 # Secrets set via `wrangler secret put <NAME>` (NOT committed):
 #   LICENSE_PRIVATE_KEY          base64 of raw 32-byte Ed25519 private key
-#   LEMONSQUEEZY_WEBHOOK_SECRET  from LS dashboard
+#   PADDLE_NOTIFICATION_SECRET   from Paddle dashboard (Notifications → Notification settings)
+#   PADDLE_MAGIC_LINK_URL        from Paddle dashboard (Catalog → Prices → Magic Link); the URL itself, e.g. https://pay.paddle.com/checkout/?_ptxn=…
 #   RESEND_API_KEY               from Resend dashboard
 #   ADMIN_TOKEN                  random 32 bytes base64
 
