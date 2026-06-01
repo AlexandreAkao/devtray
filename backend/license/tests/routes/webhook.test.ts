@@ -9,6 +9,7 @@ import { handleWebhook } from "../../src/routes/webhook";
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
 const SECRET = "pdl_ntfset_test_secret";
+const API_KEY = "pdl_apikey_test";
 
 function paddleSign(ts: number, body: string, secret: string): string {
   const tag = hmac(sha256, new TextEncoder().encode(secret), new TextEncoder().encode(`${ts}:${body}`));
@@ -22,9 +23,8 @@ function paddleHeader(body: string, secret: string, tsOverride?: number): string
 
 function transactionCompletedPayload(opts: {
   event_id: string;
-  email: string;
+  customer_id?: string;
   transaction_id: string;
-  sandbox?: boolean;
 }) {
   return JSON.stringify({
     event_id: opts.event_id,
@@ -34,10 +34,12 @@ function transactionCompletedPayload(opts: {
     data: {
       id: opts.transaction_id,
       status: "completed",
-      customer: { id: "ctm_x", email: opts.email },
+      // Paddle Billing v1: webhooks carry only customer_id, not an inline
+      // customer object. The handler must fetch the email via API.
+      customer_id: opts.customer_id ?? "ctm_default",
       items: [{ price: { id: "pri_x", product_id: "pro_x" } }],
       details: { totals: { total: "1900", currency_code: "USD" } },
-      origin: opts.sandbox ? "sandbox" : "production",
+      origin: "web",
     },
   });
 }
@@ -47,7 +49,6 @@ function adjustmentCreatedPayload(opts: {
   adjustment_id?: string;
   transaction_id: string;
   action?: "refund" | "chargeback" | "credit" | "chargeback_reverse";
-  sandbox?: boolean;
 }) {
   return JSON.stringify({
     event_id: opts.event_id,
@@ -60,15 +61,36 @@ function adjustmentCreatedPayload(opts: {
       transaction_id: opts.transaction_id,
       customer_id: "ctm_x",
       status: "approved",
-      origin: opts.sandbox ? "sandbox" : "production",
+      origin: "api",
     },
   });
 }
 
-function makeStubFetch() {
-  const calls: Array<{ url: string; init: RequestInit }> = [];
-  const impl = async (url: string | URL | Request, init?: RequestInit) => {
-    calls.push({ url: String(url), init: init! });
+type RecordedCall = { url: string; init?: RequestInit };
+
+/**
+ * Stub fetch that:
+ *  - returns the configured email for GET /customers/{id} (per customer_id → email map)
+ *  - returns a 200 OK for any other URL (Resend, etc.)
+ */
+function makeStubFetch(opts: { customerEmails?: Record<string, string>; customerStatus?: number } = {}) {
+  const calls: RecordedCall[] = [];
+  const emails = opts.customerEmails ?? { ctm_default: "buyer@example.com" };
+  const impl = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+    const urlStr = String(url);
+    calls.push({ url: urlStr, init });
+
+    // GET /customers/{customer_id} → return { data: { email } }
+    const m = urlStr.match(/\/customers\/([^/?]+)/);
+    if (m) {
+      const customerId = decodeURIComponent(m[1]!);
+      const email = emails[customerId];
+      const status = opts.customerStatus ?? (email ? 200 : 404);
+      const body = email ? { data: { id: customerId, email } } : { error: { code: "customer_not_found" } };
+      return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+    }
+
+    // Anything else (Resend) → generic ok
     return new Response(JSON.stringify({ id: "msg_x" }), { status: 200 });
   };
   return { calls, impl };
@@ -81,19 +103,21 @@ describe("routes/webhook (Paddle)", () => {
     priv = ed.utils.randomPrivateKey();
     (env as any).LICENSE_PRIVATE_KEY = btoa(String.fromCharCode(...priv));
     (env as any).PADDLE_NOTIFICATION_SECRET = SECRET;
+    (env as any).PADDLE_API_KEY = API_KEY;
+    (env as any).PADDLE_API_BASE_URL = "https://api.paddle.com";
     (env as any).RESEND_API_KEY = "re_test";
     (env as any).LICENSE_ISS = "api.devtray.app";
   });
 
   it("401 on missing signature header", async () => {
-    const body = transactionCompletedPayload({ event_id: "evt_1", email: "a@b.com", transaction_id: "txn_1" });
+    const body = transactionCompletedPayload({ event_id: "evt_1", transaction_id: "txn_1" });
     const req = new Request("http://w/webhook", { method: "POST", body, headers: {} });
     const res = await handleWebhook(req, env as any, makeStubFetch().impl);
     expect(res.status).toBe(401);
   });
 
   it("401 on wrong signature", async () => {
-    const body = transactionCompletedPayload({ event_id: "evt_2", email: "a@b.com", transaction_id: "txn_2" });
+    const body = transactionCompletedPayload({ event_id: "evt_2", transaction_id: "txn_2" });
     const req = new Request("http://w/webhook", {
       method: "POST",
       body,
@@ -115,7 +139,7 @@ describe("routes/webhook (Paddle)", () => {
   });
 
   it("400 on missing event_id", async () => {
-    const body = JSON.stringify({ event_type: "transaction.completed", data: { id: "x" } });
+    const body = JSON.stringify({ event_type: "transaction.completed", data: { id: "x", customer_id: "ctm_x" } });
     const req = new Request("http://w/webhook", {
       method: "POST",
       body,
@@ -125,11 +149,11 @@ describe("routes/webhook (Paddle)", () => {
     expect(res.status).toBe(400);
   });
 
-  it("400 on missing customer email", async () => {
+  it("400 on missing customer_id", async () => {
     const body = JSON.stringify({
-      event_id: "evt_no_email",
+      event_id: "evt_no_customer_id",
       event_type: "transaction.completed",
-      data: { id: "txn_x", customer: {}, origin: "production" },
+      data: { id: "txn_x" },
     });
     const req = new Request("http://w/webhook", {
       method: "POST",
@@ -140,9 +164,25 @@ describe("routes/webhook (Paddle)", () => {
     expect(res.status).toBe(400);
   });
 
-  it("200 + mints license on transaction.completed (prod → LICENSES)", async () => {
-    const body = transactionCompletedPayload({ event_id: "evt_3", email: "buyer@x.com", transaction_id: "txn_3" });
-    const stub = makeStubFetch();
+  it("502 when Paddle customer fetch fails (e.g. 404)", async () => {
+    const body = transactionCompletedPayload({ event_id: "evt_no_email", customer_id: "ctm_unknown", transaction_id: "txn_x" });
+    const stub = makeStubFetch({ customerEmails: {} }); // empty map → 404 on customer GET
+    const req = new Request("http://w/webhook", {
+      method: "POST",
+      body,
+      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+    });
+    const res = await handleWebhook(req, env as any, stub.impl);
+    expect(res.status).toBe(502);
+  });
+
+  it("200 + mints license on transaction.completed (resolves customer email via API)", async () => {
+    const body = transactionCompletedPayload({
+      event_id: "evt_3",
+      customer_id: "ctm_buyer3",
+      transaction_id: "txn_3",
+    });
+    const stub = makeStubFetch({ customerEmails: { ctm_buyer3: "buyer3@x.com" } });
     const req = new Request("http://w/webhook", {
       method: "POST",
       body,
@@ -150,16 +190,20 @@ describe("routes/webhook (Paddle)", () => {
     });
     const res = await handleWebhook(req, env as any, stub.impl);
     expect(res.status).toBe(200);
-    expect(stub.calls.length).toBe(1);
-    expect(stub.calls[0]!.url).toContain("resend.com");
+    // Two fetches: customer GET + Resend email
+    expect(stub.calls.length).toBe(2);
+    expect(stub.calls[0]!.url).toBe("https://api.paddle.com/customers/ctm_buyer3");
+    const customerCall = stub.calls[0]!;
+    expect(new Headers((customerCall.init as RequestInit).headers as HeadersInit).get("Authorization")).toBe(`Bearer ${API_KEY}`);
+    expect(stub.calls[1]!.url).toContain("resend.com");
 
     const keys = await env.LICENSES.list();
     expect(keys.keys.length).toBeGreaterThan(0);
   });
 
   it("idempotent — duplicate event_id is a no-op on second call", async () => {
-    const body = transactionCompletedPayload({ event_id: "evt_dup", email: "x@x.com", transaction_id: "txn_dup" });
-    const stub = makeStubFetch();
+    const body = transactionCompletedPayload({ event_id: "evt_dup", customer_id: "ctm_dup", transaction_id: "txn_dup" });
+    const stub = makeStubFetch({ customerEmails: { ctm_dup: "dup@x.com" } });
     const make = () =>
       new Request("http://w/webhook", {
         method: "POST",
@@ -168,31 +212,15 @@ describe("routes/webhook (Paddle)", () => {
       });
     await handleWebhook(make(), env as any, stub.impl);
     await handleWebhook(make(), env as any, stub.impl);
-    expect(stub.calls.length).toBe(1);
-  });
-
-  it("sandbox event routes to LICENSES_TEST", async () => {
-    const body = transactionCompletedPayload({
-      event_id: "evt_sandbox",
-      email: "sandbox@x.com",
-      transaction_id: "txn_sandbox",
-      sandbox: true,
-    });
-    const stub = makeStubFetch();
-    const req = new Request("http://w/webhook", {
-      method: "POST",
-      body,
-      headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
-    });
-    await handleWebhook(req, env as any, stub.impl);
-    const testKeys = await env.LICENSES_TEST.list();
-    expect(testKeys.keys.length).toBeGreaterThan(0);
+    // First call: customer GET + Resend = 2 fetches. Second call: short-circuited by idempotency = 0 fetches.
+    expect(stub.calls.length).toBe(2);
+    expect(stub.calls[1]!.url).toContain("resend.com");
   });
 
   it("adjustment.created action=refund marks matching record revoked=true", async () => {
     const txnId = "txn_refund_1";
-    const createBody = transactionCompletedPayload({ event_id: "evt_mint", email: "r@b.com", transaction_id: txnId });
-    const stub = makeStubFetch();
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint", customer_id: "ctm_refund1", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_refund1: "r@b.com" } });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -216,7 +244,14 @@ describe("routes/webhook (Paddle)", () => {
 
     const keys = await env.LICENSES.list();
     const records = await Promise.all(
-      keys.keys.map((k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; ls_order_id?: string; revoked: boolean }>),
+      keys.keys.map(
+        (k) =>
+          env.LICENSES.get(k.name, "json") as Promise<{
+            paddle_transaction_id?: string;
+            ls_order_id?: string;
+            revoked: boolean;
+          }>,
+      ),
     );
     const refunded = records.find((r) => r?.paddle_transaction_id === txnId);
     expect(refunded?.revoked).toBe(true);
@@ -224,8 +259,8 @@ describe("routes/webhook (Paddle)", () => {
 
   it("adjustment.created action=chargeback also revokes (same money-out outcome)", async () => {
     const txnId = "txn_cb_1";
-    const createBody = transactionCompletedPayload({ event_id: "evt_mint_cb", email: "cb@x.com", transaction_id: txnId });
-    const stub = makeStubFetch();
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_cb", customer_id: "ctm_cb", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_cb: "cb@x.com" } });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -257,8 +292,8 @@ describe("routes/webhook (Paddle)", () => {
 
   it("adjustment.created action=credit is ignored (no revoke)", async () => {
     const txnId = "txn_credit_1";
-    const createBody = transactionCompletedPayload({ event_id: "evt_mint_credit", email: "credit@x.com", transaction_id: txnId });
-    const stub = makeStubFetch();
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_credit", customer_id: "ctm_credit", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_credit: "credit@x.com" } });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -316,7 +351,7 @@ describe("routes/webhook (Paddle)", () => {
       stub.impl,
     );
 
-    const got = await env.LICENSES.get(legacyUuid, "json") as { revoked: boolean } | null;
+    const got = (await env.LICENSES.get(legacyUuid, "json")) as { revoked: boolean } | null;
     expect(got?.revoked).toBe(true);
   });
 

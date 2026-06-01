@@ -14,24 +14,48 @@ type PaddleEvent = {
   data: {
     id: string;
     status?: string;
-    // Present on transaction.* events
-    customer?: { id?: string; email?: string };
+    // Paddle Billing v1 webhooks carry the customer id at top level, NOT an
+    // embedded customer object. We resolve the email by GETting /customers/{id}.
+    customer_id?: string;
     items?: Array<{ price?: { id?: string; product_id?: string } }>;
     details?: { totals?: { total?: string; currency_code?: string } };
-    // Present on adjustment.* events
+    // Present on adjustment.* events:
     action?: "refund" | "chargeback" | "credit" | "chargeback_warning" | "chargeback_reverse" | "credit_reverse" | string;
     transaction_id?: string;
-    customer_id?: string;
-    // Sandbox-vs-prod marker. Paddle sandbox events carry origin = "sandbox".
-    // Confirmed against the sandbox smoke run (T20). Adjust here if the actual
-    // field name differs in your sandbox event.
+    // Paddle's `data.origin` is the creation channel (api/web/subscription_renewal),
+    // NOT a sandbox-vs-prod flag. Sandbox/prod is determined by which endpoint and
+    // notification secret was used. We only configure prod here; sandbox would
+    // require a parallel deployment or a second secret. So new mints are always
+    // production-track in v1.0.
     origin?: string;
     [k: string]: unknown;
   };
 };
 
-function isSandboxEvent(event: PaddleEvent): boolean {
-  return event.data?.origin === "sandbox";
+const DEFAULT_API_BASE = "https://api.paddle.com";
+
+async function fetchCustomerEmail(
+  customerId: string,
+  env: Env,
+  fetchImpl: FetchImpl,
+): Promise<string | null> {
+  const apiBase = env.PADDLE_API_BASE_URL || DEFAULT_API_BASE;
+  try {
+    const res = await fetchImpl(`${apiBase}/customers/${encodeURIComponent(customerId)}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.PADDLE_API_KEY}` },
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "<no body>");
+      console.error(`[webhook] customer fetch failed status=${res.status} customer_id=${customerId} body=${body}`);
+      return null;
+    }
+    const payload = (await res.json()) as { data?: { email?: string } };
+    return payload?.data?.email ?? null;
+  } catch (err) {
+    console.error(`[webhook] customer fetch error customer_id=${customerId}`, err);
+    return null;
+  }
 }
 
 export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl = fetch): Promise<Response> {
@@ -77,12 +101,17 @@ export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl
 }
 
 async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchImpl: FetchImpl): Promise<Response> {
-  const email = event.data?.customer?.email;
-  if (typeof email !== "string") {
-    return new Response("missing customer email", { status: 400 });
+  const customerId = event.data?.customer_id;
+  if (typeof customerId !== "string" || customerId === "") {
+    return new Response("missing customer_id", { status: 400 });
   }
+
+  const email = await fetchCustomerEmail(customerId, env, fetchImpl);
+  if (!email) {
+    return new Response("could not resolve customer email", { status: 502 });
+  }
+
   const transactionId = event.data.id;
-  const testMode = isSandboxEvent(event);
   const licenseUuid = crypto.randomUUID();
   const now = Math.floor(Date.now() / 1000);
 
@@ -92,12 +121,15 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
     priv,
   );
 
+  // v1.0 has no sandbox routing — we only configured prod webhook + prod
+  // secrets. test_mode stays false for all mints. If sandbox parallel-deploy
+  // is added later, distinguish via env var (e.g. PADDLE_ENV === "sandbox").
   const record: LicenseRecord = {
     user_email: email,
     created_at: now,
     activations: [],
     revoked: false,
-    test_mode: testMode,
+    test_mode: false,
     paddle_transaction_id: transactionId,
   };
   await putLicense(env, licenseUuid, record);
@@ -114,7 +146,7 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
     throw err;
   }
 
-  console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} test_mode=${testMode}`);
+  console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} customer=${customerId}`);
   return new Response("ok", { status: 200 });
 }
 
@@ -128,8 +160,8 @@ async function revokeByAdjustment(event: PaddleEvent, env: Env, eventId: string)
     return new Response("ok (missing transaction_id)", { status: 200 });
   }
 
-  const testMode = isSandboxEvent(event);
-  const ns = licenseNamespace(env, testMode);
+  // v1.0: prod-only routing (see mintLicense note above).
+  const ns = licenseNamespace(env, false);
 
   const list = await ns.list();
   // CF KV list() returns ≤1000 keys per call. At v1.0-era scale (hundreds of
