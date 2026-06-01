@@ -1,5 +1,6 @@
 import type { Env } from "../types";
 import { getLicense, putLicense } from "../lib/kv";
+import { reconcileRefunds, type ReconcileResult } from "../lib/reconcile";
 
 export async function handleAdminReleaseAll(req: Request, env: Env): Promise<Response> {
   const provided = req.headers.get("X-Admin-Token") ?? "";
@@ -24,6 +25,25 @@ export async function handleAdminReleaseAll(req: Request, env: Env): Promise<Res
 
   console.log(`[admin] release-all license=${body.license_uuid} cleared=${before}`);
   return Response.json({ ok: true, cleared: before });
+}
+
+type FetchImpl = typeof fetch;
+
+export async function handleAdminReconcile(
+  req: Request,
+  env: Env,
+  fetchImpl: FetchImpl = fetch,
+): Promise<Response> {
+  const provided = req.headers.get("X-Admin-Token") ?? "";
+  if (!constantTimeEqual(provided, env.ADMIN_TOKEN)) {
+    return new Response("unauthorized", { status: 401 });
+  }
+
+  const result: ReconcileResult = await reconcileRefunds(env, fetchImpl);
+  console.log(
+    `[admin] reconcile scanned=${result.scanned} fetched=${result.fetched} revoked=${result.revoked} errors=${result.errors}`,
+  );
+  return Response.json(result);
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
