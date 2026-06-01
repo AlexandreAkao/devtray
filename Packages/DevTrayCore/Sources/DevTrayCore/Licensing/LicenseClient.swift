@@ -102,7 +102,7 @@ public actor LicenseClient: ObservableObject {
     // MARK: - Private
 
     private struct ActivateRequest: Codable {
-        let licenseJwt: String   // snake_case encoder produces "license_jwt" on the wire
+        let licenseJwt: String // snake_case encoder produces "license_jwt" on the wire
         let machineHash: String
     }
 
