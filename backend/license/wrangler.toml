@@ -22,7 +22,7 @@ id = "c090c44d8d2449bfb07f1027a692e21c"
 # Secrets set via `wrangler secret put <NAME>` (NOT committed):
 #   LICENSE_PRIVATE_KEY          base64 of raw 32-byte Ed25519 private key
 #   PADDLE_NOTIFICATION_SECRET   from Paddle dashboard (Developer Tools → Notifications → your endpoint → Secret key)
-#   PADDLE_API_KEY               from Paddle dashboard (Developer Tools → Authentication → API keys); needs transactions:write + prices:read
+#   PADDLE_API_KEY               from Paddle dashboard (Developer Tools → Authentication → API keys); needs transactions:write + transactions:read + customers:read + prices:read
 #   PADDLE_PRICE_ID              the Paddle Price id the /buy route sells, format pri_01h…
 #   RESEND_API_KEY               from Resend dashboard
 #   ADMIN_TOKEN                  random 32 bytes base64
