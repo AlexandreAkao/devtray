@@ -32,3 +32,8 @@ id = "c090c44d8d2449bfb07f1027a692e21c"
 
 [vars]
 LICENSE_ISS = "api.devtray.app"
+
+# CF Workers Cron Trigger — invokes the `scheduled` handler in src/index.ts
+# every 30 minutes for refund reconciliation.
+[triggers]
+crons = ["*/30 * * * *"]
