@@ -42,22 +42,24 @@ function transactionCompletedPayload(opts: {
   });
 }
 
-function transactionRefundedPayload(opts: {
+function adjustmentCreatedPayload(opts: {
   event_id: string;
+  adjustment_id?: string;
   transaction_id: string;
+  action?: "refund" | "chargeback" | "credit" | "chargeback_reverse";
   sandbox?: boolean;
 }) {
   return JSON.stringify({
     event_id: opts.event_id,
-    event_type: "transaction.refunded",
+    event_type: "adjustment.created",
     occurred_at: "2026-05-31T19:30:00Z",
     notification_id: `ntf_${opts.event_id}`,
     data: {
-      id: opts.transaction_id,
-      status: "refunded",
-      customer: { id: "ctm_x", email: "buyer@x.com" },
-      items: [],
-      details: { totals: { total: "1900", currency_code: "USD" } },
+      id: opts.adjustment_id ?? `adj_${opts.event_id}`,
+      action: opts.action ?? "refund",
+      transaction_id: opts.transaction_id,
+      customer_id: "ctm_x",
+      status: "approved",
       origin: opts.sandbox ? "sandbox" : "production",
     },
   });
@@ -187,7 +189,7 @@ describe("routes/webhook (Paddle)", () => {
     expect(testKeys.keys.length).toBeGreaterThan(0);
   });
 
-  it("transaction.refunded marks matching record revoked=true", async () => {
+  it("adjustment.created action=refund marks matching record revoked=true", async () => {
     const txnId = "txn_refund_1";
     const createBody = transactionCompletedPayload({ event_id: "evt_mint", email: "r@b.com", transaction_id: txnId });
     const stub = makeStubFetch();
@@ -201,7 +203,7 @@ describe("routes/webhook (Paddle)", () => {
       stub.impl,
     );
 
-    const refundBody = transactionRefundedPayload({ event_id: "evt_refund", transaction_id: txnId });
+    const refundBody = adjustmentCreatedPayload({ event_id: "evt_refund", transaction_id: txnId, action: "refund" });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -220,6 +222,73 @@ describe("routes/webhook (Paddle)", () => {
     expect(refunded?.revoked).toBe(true);
   });
 
+  it("adjustment.created action=chargeback also revokes (same money-out outcome)", async () => {
+    const txnId = "txn_cb_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_cb", email: "cb@x.com", transaction_id: txnId });
+    const stub = makeStubFetch();
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const cbBody = adjustmentCreatedPayload({ event_id: "evt_cb", transaction_id: txnId, action: "chargeback" });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: cbBody,
+        headers: { "Paddle-Signature": paddleHeader(cbBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(true);
+  });
+
+  it("adjustment.created action=credit is ignored (no revoke)", async () => {
+    const txnId = "txn_credit_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_credit", email: "credit@x.com", transaction_id: txnId });
+    const stub = makeStubFetch();
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const creditBody = adjustmentCreatedPayload({ event_id: "evt_credit", transaction_id: txnId, action: "credit" });
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: creditBody,
+        headers: { "Paddle-Signature": paddleHeader(creditBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
+  });
+
   it("refund matches legacy ls_order_id records (one-cycle transition fallback)", async () => {
     const orderId = "ord_legacy_1";
     const legacyUuid = "uuid-legacy-1";
@@ -235,7 +304,7 @@ describe("routes/webhook (Paddle)", () => {
       }),
     );
 
-    const refundBody = transactionRefundedPayload({ event_id: "evt_refund_legacy", transaction_id: orderId });
+    const refundBody = adjustmentCreatedPayload({ event_id: "evt_refund_legacy", transaction_id: orderId, action: "refund" });
     const stub = makeStubFetch();
     await handleWebhook(
       new Request("http://w/webhook", {

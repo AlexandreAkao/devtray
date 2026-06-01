@@ -8,15 +8,20 @@ type FetchImpl = typeof fetch;
 
 type PaddleEvent = {
   event_id: string;
-  event_type: "transaction.completed" | "transaction.refunded" | string;
+  event_type: "transaction.completed" | "adjustment.created" | string;
   occurred_at?: string;
   notification_id?: string;
   data: {
     id: string;
     status?: string;
+    // Present on transaction.* events
     customer?: { id?: string; email?: string };
     items?: Array<{ price?: { id?: string; product_id?: string } }>;
     details?: { totals?: { total?: string; currency_code?: string } };
+    // Present on adjustment.* events
+    action?: "refund" | "chargeback" | "credit" | "chargeback_warning" | "chargeback_reverse" | "credit_reverse" | string;
+    transaction_id?: string;
+    customer_id?: string;
     // Sandbox-vs-prod marker. Paddle sandbox events carry origin = "sandbox".
     // Confirmed against the sandbox smoke run (T20). Adjust here if the actual
     // field name differs in your sandbox event.
@@ -56,8 +61,15 @@ export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl
   switch (event.event_type) {
     case "transaction.completed":
       return mintLicense(event, env, eventId, fetchImpl);
-    case "transaction.refunded":
-      return revokeByTransactionId(event, env, eventId);
+    case "adjustment.created":
+      // Paddle models refunds, chargebacks, credits as Adjustments. Only "refund"
+      // (and "chargeback" — money clawed back same way) should revoke a license.
+      // Credits don't return money so the license stays valid.
+      if (event.data?.action === "refund" || event.data?.action === "chargeback") {
+        return revokeByAdjustment(event, env, eventId);
+      }
+      await markEventProcessed(env, eventId, "skipped");
+      return new Response("ok (ignored: non-refund adjustment)", { status: 200 });
     default:
       await markEventProcessed(env, eventId, "skipped");
       return new Response("ok (ignored)", { status: 200 });
@@ -106,8 +118,16 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
   return new Response("ok", { status: 200 });
 }
 
-async function revokeByTransactionId(event: PaddleEvent, env: Env, eventId: string): Promise<Response> {
-  const transactionId = event.data.id;
+async function revokeByAdjustment(event: PaddleEvent, env: Env, eventId: string): Promise<Response> {
+  // Adjustment events carry the originating transaction id in data.transaction_id.
+  // data.id is the adjustment id (adj_…), not the transaction (txn_…).
+  const transactionId = event.data.transaction_id;
+  if (!transactionId) {
+    console.warn(`[webhook] adjustment missing transaction_id event_id=${eventId} adjustment_id=${event.data.id}`);
+    await markEventProcessed(env, eventId, "skipped");
+    return new Response("ok (missing transaction_id)", { status: 200 });
+  }
+
   const testMode = isSandboxEvent(event);
   const ns = licenseNamespace(env, testMode);
 
@@ -123,7 +143,7 @@ async function revokeByTransactionId(event: PaddleEvent, env: Env, eventId: stri
     if (rec && (rec.paddle_transaction_id === transactionId || rec.ls_order_id === transactionId)) {
       rec.revoked = true;
       await ns.put(key.name, JSON.stringify(rec));
-      console.log(`[webhook] revoked license=${key.name} txn=${transactionId}`);
+      console.log(`[webhook] revoked license=${key.name} txn=${transactionId} adjustment=${event.data.id} action=${event.data.action}`);
     }
   }
   await markEventProcessed(env, eventId, "revoked");
