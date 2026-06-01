@@ -1,21 +1,13 @@
-import { Hono } from "hono";
 import type { Env } from "./types";
-import { handleWebhook } from "./routes/webhook";
-import { handleActivate } from "./routes/activate";
-import { handleDeactivate } from "./routes/deactivate";
-import { handleStatus } from "./routes/status";
-import { handleAdminReleaseAll } from "./routes/admin";
-import { handleBuy } from "./routes/buy";
+import app from "./app";
+import { reconcileRefunds } from "./lib/reconcile";
 
-const app = new Hono<{ Bindings: Env }>();
-
-app.get("/", (c) => c.text("DevTray license backend OK"));
-
-app.post("/webhook", (c) => handleWebhook(c.req.raw, c.env));
-app.post("/activate", (c) => handleActivate(c.req.raw, c.env));
-app.post("/deactivate", (c) => handleDeactivate(c.req.raw, c.env));
-app.get("/status", (c) => handleStatus(c.req.raw, c.env));
-app.get("/buy", (c) => handleBuy(c.req.raw, c.env));
-app.post("/admin/release-all", (c) => handleAdminReleaseAll(c.req.raw, c.env));
-
-export default app;
+export default {
+  fetch: app.fetch,
+  scheduled: async (_event: ScheduledController, env: Env, _ctx: ExecutionContext) => {
+    const result = await reconcileRefunds(env);
+    console.log(
+      `[cron] reconcile result scanned=${result.scanned} fetched=${result.fetched} revoked=${result.revoked} errors=${result.errors}`,
+    );
+  },
+};
