@@ -8,7 +8,7 @@ Paddle checkout Magic Link.
 ## Routes
 
 - `POST /webhook` — Paddle event ingestion (HMAC-verified via `Paddle-Signature`, idempotent via `event_id`)
-- `GET  /buy` — 302 redirect to `PADDLE_MAGIC_LINK_URL`; optional `?email=` appended as `customer_email=`
+- `GET  /buy` — calls `POST /transactions` on the Paddle API with `PADDLE_PRICE_ID` and 302-redirects to the returned `checkout.url`; optional `?email=` is forwarded as `customer.email`
 - `POST /activate` — App activates a license + machine_hash (quota-checked)
 - `POST /deactivate` — App frees a slot
 - `GET  /status?license=<uuid>&machine=<hash>` — Heartbeat (revoke detection)

@@ -21,10 +21,14 @@ id = "c090c44d8d2449bfb07f1027a692e21c"
 
 # Secrets set via `wrangler secret put <NAME>` (NOT committed):
 #   LICENSE_PRIVATE_KEY          base64 of raw 32-byte Ed25519 private key
-#   PADDLE_NOTIFICATION_SECRET   from Paddle dashboard (Notifications → Notification settings)
-#   PADDLE_MAGIC_LINK_URL        from Paddle dashboard (Catalog → Prices → Magic Link); the URL itself, e.g. https://pay.paddle.com/checkout/?_ptxn=…
+#   PADDLE_NOTIFICATION_SECRET   from Paddle dashboard (Developer Tools → Notifications → your endpoint → Secret key)
+#   PADDLE_API_KEY               from Paddle dashboard (Developer Tools → Authentication → API keys); needs transactions:write + prices:read
+#   PADDLE_PRICE_ID              the Paddle Price id the /buy route sells, format pri_01h…
 #   RESEND_API_KEY               from Resend dashboard
 #   ADMIN_TOKEN                  random 32 bytes base64
+#
+# Optional variable (NOT a secret — defaults to prod when unset):
+#   PADDLE_API_BASE_URL          override for sandbox testing, e.g. https://sandbox-api.paddle.com
 
 [vars]
 LICENSE_ISS = "api.devtray.app"
