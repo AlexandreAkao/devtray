@@ -32,7 +32,7 @@ public struct PaywallView: View {
 
             VStack(spacing: 10) {
                 Link(destination: Self.buyURL) {
-                    Text("Buy License — $19")
+                    Text("Buy License — $14.99")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)

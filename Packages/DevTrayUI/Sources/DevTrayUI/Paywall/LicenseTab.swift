@@ -100,7 +100,7 @@ public struct LicenseTab: View {
                 Text("Need to deactivate another Mac you can't reach? Email ")
                     + Text("[support@devtray.app](mailto:support@devtray.app)")
             } else {
-                Link("Buy a license — $19", destination: PaywallView.buyURL)
+                Link("Buy a license — $14.99", destination: PaywallView.buyURL)
                 Text("All 13 tools and Spotlight stay free forever.")
                     .font(.caption).foregroundStyle(.secondary)
             }

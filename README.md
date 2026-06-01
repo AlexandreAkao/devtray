@@ -36,9 +36,9 @@ Requirements: macOS 14 (Sonoma) or later. Apple Silicon or Intel.
 
 ## Buy
 
-**$19 USD, one-time, lifetime updates for v1.x.** Auto-localized currency for non-US buyers.
+**$14.99 USD, one-time, lifetime updates for v1.x.** Auto-localized currency for non-US buyers.
 
-[Buy DevTray ($19)](https://api.devtray.app/buy)
+[Buy DevTray ($14.99)](https://api.devtray.app/buy)
 
 Includes a 14-day free trial — no credit card required. All 13 tools and Spotlight stay free forever; a license unlocks Snippets save/edit and the Tools preferences pane.
 
