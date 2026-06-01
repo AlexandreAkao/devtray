@@ -54,4 +54,38 @@ describe("routes/admin", () => {
     const res = await call(ADMIN_TOKEN, { license_uuid: "00000000-0000-0000-0000-000000000000" });
     expect(res.status).toBe(404);
   });
+
+  describe("POST /admin/reconcile", () => {
+    async function callReconcile(token: string | null): Promise<Response> {
+      const { handleAdminReconcile } = await import("../../src/routes/admin");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token !== null) headers["X-Admin-Token"] = token;
+      return handleAdminReconcile(
+        new Request("http://w/admin/reconcile", { method: "POST", headers }),
+        env as any,
+        // Stub fetch — return completed for any txn so reconcile produces 0 revokes.
+        async () => new Response(JSON.stringify({ data: { status: "completed" } }), { status: 200 }),
+      );
+    }
+
+    it("401 without admin token", async () => {
+      const res = await callReconcile(null);
+      expect(res.status).toBe(401);
+    });
+
+    it("401 with wrong admin token", async () => {
+      const res = await callReconcile("wrong");
+      expect(res.status).toBe(401);
+    });
+
+    it("200 + JSON result with correct token", async () => {
+      const res = await callReconcile(ADMIN_TOKEN);
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { scanned: number; fetched: number; revoked: number; errors: number };
+      expect(typeof body.scanned).toBe("number");
+      expect(typeof body.fetched).toBe("number");
+      expect(typeof body.revoked).toBe("number");
+      expect(typeof body.errors).toBe("number");
+    });
+  });
 });
