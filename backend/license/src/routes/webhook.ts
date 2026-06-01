@@ -86,14 +86,23 @@ export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl
     case "transaction.completed":
       return mintLicense(event, env, eventId, fetchImpl);
     case "adjustment.created":
+    case "adjustment.updated":
       // Paddle models refunds, chargebacks, credits as Adjustments. Only "refund"
-      // (and "chargeback" — money clawed back same way) should revoke a license.
-      // Credits don't return money so the license stays valid.
-      if (event.data?.action === "refund" || event.data?.action === "chargeback") {
-        return revokeByAdjustment(event, env, eventId);
+      // and "chargeback" return money to the buyer; both should revoke. Credits
+      // don't return money so the license stays valid.
+      if (event.data?.action !== "refund" && event.data?.action !== "chargeback") {
+        await markEventProcessed(env, eventId, "skipped");
+        return new Response("ok (ignored: non-refund adjustment)", { status: 200 });
       }
-      await markEventProcessed(env, eventId, "skipped");
-      return new Response("ok (ignored: non-refund adjustment)", { status: 200 });
+      // Live-account refunds are created as status=pending_approval and only
+      // become status=approved after Paddle reviews them. Money has only moved
+      // when status=approved — revoking earlier would be premature, and
+      // status=rejected means it won't move at all.
+      if (event.data?.status !== "approved") {
+        await markEventProcessed(env, eventId, "skipped");
+        return new Response(`ok (ignored: adjustment status=${event.data?.status ?? "unknown"})`, { status: 200 });
+      }
+      return revokeByAdjustment(event, env, eventId);
     default:
       await markEventProcessed(env, eventId, "skipped");
       return new Response("ok (ignored)", { status: 200 });
