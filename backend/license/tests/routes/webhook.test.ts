@@ -44,15 +44,17 @@ function transactionCompletedPayload(opts: {
   });
 }
 
-function adjustmentCreatedPayload(opts: {
+function adjustmentPayload(opts: {
   event_id: string;
+  event_type?: "adjustment.created" | "adjustment.updated";
   adjustment_id?: string;
   transaction_id: string;
   action?: "refund" | "chargeback" | "credit" | "chargeback_reverse";
+  status?: "pending_approval" | "approved" | "rejected";
 }) {
   return JSON.stringify({
     event_id: opts.event_id,
-    event_type: "adjustment.created",
+    event_type: opts.event_type ?? "adjustment.created",
     occurred_at: "2026-05-31T19:30:00Z",
     notification_id: `ntf_${opts.event_id}`,
     data: {
@@ -60,7 +62,7 @@ function adjustmentCreatedPayload(opts: {
       action: opts.action ?? "refund",
       transaction_id: opts.transaction_id,
       customer_id: "ctm_x",
-      status: "approved",
+      status: opts.status ?? "approved",
       origin: "api",
     },
   });
@@ -217,6 +219,45 @@ describe("routes/webhook (Paddle)", () => {
     expect(stub.calls[1]!.url).toContain("resend.com");
   });
 
+  it("adjustment.created with status=pending_approval does NOT revoke (waits for approval)", async () => {
+    const txnId = "txn_pending_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_pending", customer_id: "ctm_pending", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_pending: "p@x.com" } });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const pendingBody = adjustmentPayload({
+      event_id: "evt_pending",
+      transaction_id: txnId,
+      action: "refund",
+      status: "pending_approval",
+    });
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: pendingBody,
+        headers: { "Paddle-Signature": paddleHeader(pendingBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
+  });
+
   it("adjustment.created action=refund marks matching record revoked=true", async () => {
     const txnId = "txn_refund_1";
     const createBody = transactionCompletedPayload({ event_id: "evt_mint", customer_id: "ctm_refund1", transaction_id: txnId });
@@ -231,7 +272,7 @@ describe("routes/webhook (Paddle)", () => {
       stub.impl,
     );
 
-    const refundBody = adjustmentCreatedPayload({ event_id: "evt_refund", transaction_id: txnId, action: "refund" });
+    const refundBody = adjustmentPayload({ event_id: "evt_refund", transaction_id: txnId, action: "refund" });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -271,7 +312,7 @@ describe("routes/webhook (Paddle)", () => {
       stub.impl,
     );
 
-    const cbBody = adjustmentCreatedPayload({ event_id: "evt_cb", transaction_id: txnId, action: "chargeback" });
+    const cbBody = adjustmentPayload({ event_id: "evt_cb", transaction_id: txnId, action: "chargeback" });
     await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -290,6 +331,103 @@ describe("routes/webhook (Paddle)", () => {
     expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(true);
   });
 
+  it("adjustment.updated with status=approved revokes (live-account flow after Paddle approval)", async () => {
+    const txnId = "txn_live_approved_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_live", customer_id: "ctm_live", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_live: "live@x.com" } });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    // Simulate the live flow: created with pending_approval (no revoke), then
+    // updated to approved (revoke).
+    const pendingBody = adjustmentPayload({
+      event_id: "evt_live_pending",
+      transaction_id: txnId,
+      action: "refund",
+      status: "pending_approval",
+    });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: pendingBody,
+        headers: { "Paddle-Signature": paddleHeader(pendingBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const approvedBody = adjustmentPayload({
+      event_id: "evt_live_approved",
+      event_type: "adjustment.updated",
+      transaction_id: txnId,
+      action: "refund",
+      status: "approved",
+    });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: approvedBody,
+        headers: { "Paddle-Signature": paddleHeader(approvedBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(true);
+  });
+
+  it("adjustment.updated with status=rejected does NOT revoke", async () => {
+    const txnId = "txn_rejected_1";
+    const createBody = transactionCompletedPayload({ event_id: "evt_mint_rej", customer_id: "ctm_rej", transaction_id: txnId });
+    const stub = makeStubFetch({ customerEmails: { ctm_rej: "rej@x.com" } });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: createBody,
+        headers: { "Paddle-Signature": paddleHeader(createBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+
+    const rejectedBody = adjustmentPayload({
+      event_id: "evt_rej",
+      event_type: "adjustment.updated",
+      transaction_id: txnId,
+      action: "refund",
+      status: "rejected",
+    });
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body: rejectedBody,
+        headers: { "Paddle-Signature": paddleHeader(rejectedBody, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
+  });
+
   it("adjustment.created action=credit is ignored (no revoke)", async () => {
     const txnId = "txn_credit_1";
     const createBody = transactionCompletedPayload({ event_id: "evt_mint_credit", customer_id: "ctm_credit", transaction_id: txnId });
@@ -304,7 +442,7 @@ describe("routes/webhook (Paddle)", () => {
       stub.impl,
     );
 
-    const creditBody = adjustmentCreatedPayload({ event_id: "evt_credit", transaction_id: txnId, action: "credit" });
+    const creditBody = adjustmentPayload({ event_id: "evt_credit", transaction_id: txnId, action: "credit" });
     const res = await handleWebhook(
       new Request("http://w/webhook", {
         method: "POST",
@@ -339,7 +477,7 @@ describe("routes/webhook (Paddle)", () => {
       }),
     );
 
-    const refundBody = adjustmentCreatedPayload({ event_id: "evt_refund_legacy", transaction_id: orderId, action: "refund" });
+    const refundBody = adjustmentPayload({ event_id: "evt_refund_legacy", transaction_id: orderId, action: "refund" });
     const stub = makeStubFetch();
     await handleWebhook(
       new Request("http://w/webhook", {
