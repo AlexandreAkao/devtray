@@ -62,8 +62,8 @@ targets:
       properties:
         LSUIElement: true
         CFBundleDisplayName: DevTray
-        CFBundleShortVersionString: "1.0.1"
-        CFBundleVersion: "13"
+        CFBundleShortVersionString: "1.0.2"
+        CFBundleVersion: "14"
         SUFeedURL: https://alexandreakao.github.io/devtray/appcast.xml
         SUPublicEDKey: "ZxyqDIzwmdH+/nfaxtGzTqG+ZZ3ZgNob8Ei0gS3k948="
         SUScheduledCheckInterval: 604800
