@@ -58,9 +58,85 @@ sign_and_post() {
     --data "$body"
 }
 
-# Stub — implemented in Task 9.
-mint_payload() { echo "TODO"; }
+mint_payload() {
+  jq -nc \
+    --arg eid "$EVENT_MINT" \
+    --arg txn "$TXN_ID" \
+    --arg occ "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    '{
+      event_id: $eid,
+      event_type: "transaction.completed",
+      occurred_at: $occ,
+      notification_id: ("ntf_" + $eid),
+      data: {
+        id: $txn,
+        status: "completed",
+        customer_id: "ctm_e2e_stub",
+        items: [{price: {id: "pri_e2e", product_id: "pro_e2e"}}],
+        details: {totals: {total: "1499", currency_code: "USD"}},
+        origin: "web"
+      }
+    }'
+}
+
+# Scans LICENSES_TEST for a record whose paddle_transaction_id matches $TXN_ID.
+# Prints the UUID to stdout. Returns nonzero if not found.
+find_license_uuid() {
+  local target="$1"
+  cd backend/license
+  local keys
+  keys=$(npx wrangler kv key list --binding LICENSES_TEST 2>/dev/null | jq -r '.[].name')
+  cd - >/dev/null
+  for key in $keys; do
+    cd backend/license
+    local val
+    val=$(npx wrangler kv key get "$key" --binding LICENSES_TEST 2>/dev/null || echo "{}")
+    cd - >/dev/null
+    if echo "$val" | jq -e --arg t "$target" '.paddle_transaction_id == $t' >/dev/null 2>&1; then
+      echo "$key"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Stub — implemented in Task 10.
 refund_payload() { echo "TODO"; }
-find_license_uuid() { echo "TODO"; }
+# Stubs — implemented in Task 11.
 delete_license() { echo "TODO"; }
 delete_event() { echo "TODO"; }
+
+# --- mint ---
+
+echo "[e2e] posting mint…"
+mint_resp="$(sign_and_post "$(mint_payload)")"
+echo "[e2e] mint response: $mint_resp"
+
+echo "[e2e] scanning LICENSES_TEST for the minted record…"
+MINTED_UUID="$(find_license_uuid "$TXN_ID")" || {
+  echo "[e2e] FAIL: minted record not found in LICENSES_TEST for txn=$TXN_ID" >&2
+  exit 1
+}
+echo "[e2e] minted license=$MINTED_UUID"
+
+cd backend/license
+mint_record="$(npx wrangler kv key get "$MINTED_UUID" --binding LICENSES_TEST 2>/dev/null)"
+cd - >/dev/null
+
+revoked_after_mint="$(echo "$mint_record" | jq -r '.revoked')"
+test_mode="$(echo "$mint_record" | jq -r '.test_mode')"
+email="$(echo "$mint_record" | jq -r '.user_email')"
+
+if [[ "$revoked_after_mint" != "false" ]]; then
+  echo "[e2e] FAIL: expected revoked=false after mint, got $revoked_after_mint" >&2
+  exit 1
+fi
+if [[ "$test_mode" != "true" ]]; then
+  echo "[e2e] FAIL: expected test_mode=true, got $test_mode" >&2
+  exit 1
+fi
+if [[ "$email" != "e2e@devtray.app" ]]; then
+  echo "[e2e] FAIL: expected user_email=e2e@devtray.app, got $email" >&2
+  exit 1
+fi
+echo "[e2e] mint assertions passed"
