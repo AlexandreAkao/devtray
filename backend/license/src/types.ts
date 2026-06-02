@@ -9,11 +9,7 @@ export type LicenseRecord = {
   activations: Activation[];
   revoked: boolean;
   test_mode: boolean;
-  // Paddle is the active provider going forward.
   paddle_transaction_id?: string;
-  // Read-only fallback for v0.11-era records minted under LemonSqueezy.
-  // Removed in v1.0.1 once production KV has zero ls_order_id records.
-  ls_order_id?: string;
 };
 
 export type EventRecord = {
