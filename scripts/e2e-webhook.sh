@@ -100,8 +100,28 @@ find_license_uuid() {
   return 1
 }
 
-# Stub — implemented in Task 10.
-refund_payload() { echo "TODO"; }
+refund_payload() {
+  jq -nc \
+    --arg eid "$EVENT_REFUND" \
+    --arg txn "$TXN_ID" \
+    --arg adj "$ADJ_ID" \
+    --arg occ "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    '{
+      event_id: $eid,
+      event_type: "adjustment.updated",
+      occurred_at: $occ,
+      notification_id: ("ntf_" + $eid),
+      data: {
+        id: $adj,
+        action: "refund",
+        status: "approved",
+        transaction_id: $txn,
+        customer_id: "ctm_e2e_stub",
+        origin: "api"
+      }
+    }'
+}
+
 # Stubs — implemented in Task 11.
 delete_license() { echo "TODO"; }
 delete_event() { echo "TODO"; }
@@ -140,3 +160,20 @@ if [[ "$email" != "e2e@devtray.app" ]]; then
   exit 1
 fi
 echo "[e2e] mint assertions passed"
+
+# --- refund ---
+
+echo "[e2e] posting refund…"
+refund_resp="$(sign_and_post "$(refund_payload)")"
+echo "[e2e] refund response: $refund_resp"
+
+cd backend/license
+refunded_record="$(npx wrangler kv key get "$MINTED_UUID" --binding LICENSES_TEST 2>/dev/null)"
+cd - >/dev/null
+
+revoked_after_refund="$(echo "$refunded_record" | jq -r '.revoked')"
+if [[ "$revoked_after_refund" != "true" ]]; then
+  echo "[e2e] FAIL: expected revoked=true after refund, got $revoked_after_refund" >&2
+  exit 1
+fi
+echo "[e2e] refund assertions passed"
