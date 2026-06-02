@@ -10,21 +10,30 @@ const SECS_90D = 90 * 86400;
 
 type Recorded = { url: string; init?: RequestInit };
 
-function makePaddleStub(opts: { txStatuses?: Record<string, string>; failOn?: Set<string>; networkFail?: boolean } = {}) {
+type AdjStub = { id?: string; action: "refund" | "chargeback" | "credit" | string };
+
+function makePaddleStub(opts: {
+  adjustmentsByTxn?: Record<string, AdjStub[]>;
+  failOn?: Set<string>;        // txn_ids whose /adjustments query returns 500
+  networkFail?: boolean;        // throw on any /adjustments query
+} = {}) {
   const calls: Recorded[] = [];
-  const statuses = opts.txStatuses ?? {};
+  const adjustmentsByTxn = opts.adjustmentsByTxn ?? {};
   const fail = opts.failOn ?? new Set<string>();
   const impl = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const urlStr = String(url);
     calls.push({ url: urlStr, init });
     if (opts.networkFail) throw new Error("network down");
-    const m = urlStr.match(/\/transactions\/([^/?]+)/);
-    if (!m) return new Response("not-found", { status: 404 });
-    const txnId = decodeURIComponent(m[1]!);
-    if (fail.has(txnId)) return new Response(JSON.stringify({ error: { code: "boom" } }), { status: 500 });
-    const status = statuses[txnId];
-    if (!status) return new Response(JSON.stringify({ error: { code: "not_found" } }), { status: 404 });
-    return new Response(JSON.stringify({ data: { id: txnId, status } }), {
+    if (!urlStr.includes("/adjustments")) {
+      return new Response("not-found", { status: 404 });
+    }
+    const u = new URL(urlStr);
+    const txnId = u.searchParams.get("transaction_id") ?? "";
+    if (fail.has(txnId)) {
+      return new Response(JSON.stringify({ error: { code: "boom" } }), { status: 500 });
+    }
+    const items = adjustmentsByTxn[txnId] ?? [];
+    return new Response(JSON.stringify({ data: items, meta: { pagination: { has_more: false } } }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -59,7 +68,7 @@ describe("lib/reconcile", () => {
 
   it("skips records younger than 60s", async () => {
     await seedLicense("u1", { created_at: Math.floor(NOW_MS / 1000) - 10 });
-    const stub = makePaddleStub({ txStatuses: { txn_u1: "refunded" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u1: [{ id: "adj_u1", action: "refund" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.scanned).toBe(1);
     expect(result.fetched).toBe(0);
@@ -69,7 +78,7 @@ describe("lib/reconcile", () => {
 
   it("skips records older than 90 days", async () => {
     await seedLicense("u2", { created_at: Math.floor(NOW_MS / 1000) - (SECS_90D + 3600) });
-    const stub = makePaddleStub({ txStatuses: { txn_u2: "refunded" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u2: [{ id: "adj_u2", action: "refund" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.fetched).toBe(0);
     expect(result.revoked).toBe(0);
@@ -77,7 +86,7 @@ describe("lib/reconcile", () => {
 
   it("skips records already revoked", async () => {
     await seedLicense("u3", { revoked: true });
-    const stub = makePaddleStub({ txStatuses: { txn_u3: "refunded" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u3: [{ id: "adj_u3", action: "refund" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.fetched).toBe(0);
     expect(result.revoked).toBe(0);
@@ -98,9 +107,9 @@ describe("lib/reconcile", () => {
     expect(stub.calls.length).toBe(0);
   });
 
-  it("revokes when Paddle returns status=refunded", async () => {
+  it("revokes when there is a refund adjustment", async () => {
     await seedLicense("u5", {});
-    const stub = makePaddleStub({ txStatuses: { txn_u5: "refunded" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u5: [{ id: "adj_u5", action: "refund" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.fetched).toBe(1);
     expect(result.revoked).toBe(1);
@@ -108,18 +117,18 @@ describe("lib/reconcile", () => {
     expect(rec.revoked).toBe(true);
   });
 
-  it("revokes when Paddle returns status=partially_refunded", async () => {
+  it("revokes when there is a partial refund adjustment", async () => {
     await seedLicense("u6", {});
-    const stub = makePaddleStub({ txStatuses: { txn_u6: "partially_refunded" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u6: [{ id: "adj_u6", action: "refund" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.revoked).toBe(1);
     const rec = (await env.LICENSES.get("u6", "json")) as LicenseRecord;
     expect(rec.revoked).toBe(true);
   });
 
-  it("does NOT revoke when Paddle returns status=completed", async () => {
+  it("does NOT revoke when there are no refund adjustments", async () => {
     await seedLicense("u7", {});
-    const stub = makePaddleStub({ txStatuses: { txn_u7: "completed" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: {} });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.fetched).toBe(1);
     expect(result.revoked).toBe(0);
@@ -145,7 +154,7 @@ describe("lib/reconcile", () => {
 
   it("sends Authorization Bearer with PADDLE_API_KEY", async () => {
     await seedLicense("u10", {});
-    const stub = makePaddleStub({ txStatuses: { txn_u10: "completed" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: {} });
     await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(stub.calls.length).toBe(1);
     const headers = new Headers((stub.calls[0]!.init as RequestInit).headers as HeadersInit);
@@ -155,9 +164,25 @@ describe("lib/reconcile", () => {
   it("hits the API base URL from PADDLE_API_BASE_URL (sandbox override)", async () => {
     (env as any).PADDLE_API_BASE_URL = "https://sandbox-api.paddle.com";
     await seedLicense("u11", {});
-    const stub = makePaddleStub({ txStatuses: { txn_u11: "completed" } });
+    const stub = makePaddleStub({ adjustmentsByTxn: {} });
     await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
-    expect(stub.calls[0]!.url).toBe("https://sandbox-api.paddle.com/transactions/txn_u11");
+    expect(stub.calls[0]!.url).toBe("https://sandbox-api.paddle.com/adjustments?transaction_id=txn_u11&status=approved&per_page=50");
     (env as any).PADDLE_API_BASE_URL = "https://api.paddle.com";
+  });
+
+  it("returns errors:1, scanned:0 when env.LICENSES.list() rejects (does not throw)", async () => {
+    const original = env.LICENSES.list.bind(env.LICENSES);
+    (env.LICENSES as any).list = () => Promise.reject(new Error("kv outage"));
+
+    try {
+      const stub = makePaddleStub();
+      const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
+      expect(result.errors).toBe(1);
+      expect(result.scanned).toBe(0);
+      expect(result.fetched).toBe(0);
+      expect(result.revoked).toBe(0);
+    } finally {
+      (env.LICENSES as any).list = original;
+    }
   });
 });

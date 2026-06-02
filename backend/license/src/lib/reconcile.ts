@@ -5,7 +5,6 @@ type FetchImpl = typeof fetch;
 const DEFAULT_API_BASE = "https://api.paddle.com";
 const MIN_AGE_SEC = 60;             // skip just-minted (avoid mint vs poll race)
 const MAX_AGE_SEC = 90 * 86400;     // skip past Paddle's refund window
-const REVOKE_STATUSES = new Set(["refunded", "partially_refunded"]);
 
 export type ReconcileResult = {
   scanned: number;
@@ -23,7 +22,14 @@ export async function reconcileRefunds(
   const apiBase = env.PADDLE_API_BASE_URL || DEFAULT_API_BASE;
   const nowSec = nowMs / 1000;
 
-  const list = await env.LICENSES.list();
+  let list: Awaited<ReturnType<typeof env.LICENSES.list>>;
+  try {
+    list = await env.LICENSES.list();
+  } catch (err) {
+    console.error("[reconcile] KV list failed — aborting pass", err);
+    result.errors = 1;
+    return result;
+  }
   if (list.list_complete === false) {
     console.warn("[reconcile] KV list truncated — some licenses skipped this pass");
   }
@@ -41,7 +47,7 @@ export async function reconcileRefunds(
 
     result.fetched++;
     try {
-      const url = `${apiBase}/transactions/${encodeURIComponent(rec.paddle_transaction_id)}`;
+      const url = `${apiBase}/adjustments?transaction_id=${encodeURIComponent(rec.paddle_transaction_id)}&status=approved&per_page=50`;
       const res = await fetchImpl(url, {
         headers: { Authorization: `Bearer ${env.PADDLE_API_KEY}` },
       });
@@ -51,13 +57,14 @@ export async function reconcileRefunds(
         console.warn(`[reconcile] fetch failed license=${key.name} txn=${rec.paddle_transaction_id} status=${res.status} body=${body}`);
         continue;
       }
-      const payload = (await res.json()) as { data?: { status?: string } };
-      const txStatus = payload?.data?.status;
-      if (txStatus && REVOKE_STATUSES.has(txStatus)) {
+      const payload = (await res.json()) as { data?: Array<{ id?: string; action?: string }> };
+      const items = payload?.data ?? [];
+      const refundAdj = items.find((adj) => adj.action === "refund" || adj.action === "chargeback");
+      if (refundAdj) {
         rec.revoked = true;
         await env.LICENSES.put(key.name, JSON.stringify(rec));
         result.revoked++;
-        console.log(`[reconcile] revoked license=${key.name} txn=${rec.paddle_transaction_id} status=${txStatus}`);
+        console.log(`[reconcile] revoked license=${key.name} txn=${rec.paddle_transaction_id} adjustment=${refundAdj.id} action=${refundAdj.action}`);
       }
     } catch (err) {
       result.errors++;
