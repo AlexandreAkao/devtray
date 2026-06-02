@@ -218,12 +218,13 @@ describe("routes/webhook (Paddle)", () => {
     });
     const res = await handleWebhook(req, env as any, stub.impl);
     expect(res.status).toBe(200);
-    // Two fetches: customer GET + Resend email
-    expect(stub.calls.length).toBe(2);
-    expect(stub.calls[0]!.url).toBe("https://api.paddle.com/customers/ctm_buyer3");
-    const customerCall = stub.calls[0]!;
+    // Three fetches: adjustments GET + customer GET + Resend email
+    expect(stub.calls.length).toBe(3);
+    expect(stub.calls[0]!.url).toContain("/adjustments");
+    expect(stub.calls[1]!.url).toBe("https://api.paddle.com/customers/ctm_buyer3");
+    const customerCall = stub.calls[1]!;
     expect(new Headers((customerCall.init as RequestInit).headers as HeadersInit).get("Authorization")).toBe(`Bearer ${API_KEY}`);
-    expect(stub.calls[1]!.url).toContain("resend.com");
+    expect(stub.calls[2]!.url).toContain("resend.com");
 
     const keys = await env.LICENSES.list();
     expect(keys.keys.length).toBeGreaterThan(0);
@@ -240,9 +241,9 @@ describe("routes/webhook (Paddle)", () => {
       });
     await handleWebhook(make(), env as any, stub.impl);
     await handleWebhook(make(), env as any, stub.impl);
-    // First call: customer GET + Resend = 2 fetches. Second call: short-circuited by idempotency = 0 fetches.
-    expect(stub.calls.length).toBe(2);
-    expect(stub.calls[1]!.url).toContain("resend.com");
+    // First call: adjustments GET + customer GET + Resend = 3 fetches. Second call: short-circuited by idempotency = 0 fetches.
+    expect(stub.calls.length).toBe(3);
+    expect(stub.calls[2]!.url).toContain("resend.com");
   });
 
   it("adjustment.created with status=pending_approval does NOT revoke (waits for approval)", async () => {

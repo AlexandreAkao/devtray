@@ -147,12 +147,24 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
     return new Response("missing customer_id", { status: 400 });
   }
 
-  const email = await fetchCustomerEmail(customerId, env, fetchImpl);
+  const transactionId = event.data.id;
+  // E2E test path: txn ids prefixed `txn_e2e_` skip Paddle API calls + email send,
+  // and route persistence to LICENSES_TEST via test_mode=true. See spec §2 / decision #11.
+  const isE2E = transactionId.startsWith("txn_e2e_");
+
+  // Pre-mint guard: when not in e2e mode, query Paddle for any approved
+  // refund/chargeback adjustments on this transaction. Closes the retroactive-
+  // mint race that produced the v1.0 zombie license. Fail-open: null result
+  // (Paddle API 5xx or network error) proceeds with mint and trusts the 30-min
+  // cron reconcile (also fixed in this cycle) to catch it later.
+  const refundLookup = isE2E ? false : await fetchTransactionRefunds(transactionId, env, fetchImpl);
+  const alreadyRefunded = refundLookup === true;
+
+  const email = isE2E ? "e2e@devtray.app" : await fetchCustomerEmail(customerId, env, fetchImpl);
   if (!email) {
     return new Response("could not resolve customer email", { status: 502 });
   }
 
-  const transactionId = event.data.id;
   const licenseUuid = crypto.randomUUID();
   const now = Math.floor(Date.now() / 1000);
 
@@ -162,32 +174,31 @@ async function mintLicense(event: PaddleEvent, env: Env, eventId: string, fetchI
     priv,
   );
 
-  // v1.0 has no sandbox routing — we only configured prod webhook + prod
-  // secrets. test_mode stays false for all mints. If sandbox parallel-deploy
-  // is added later, distinguish via env var (e.g. PADDLE_ENV === "sandbox").
   const record: LicenseRecord = {
     user_email: email,
     created_at: now,
     activations: [],
-    revoked: false,
-    test_mode: false,
+    revoked: alreadyRefunded,
+    test_mode: isE2E,
     paddle_transaction_id: transactionId,
   };
   await putLicense(env, licenseUuid, record);
   await markEventProcessed(env, eventId, "minted");
 
-  try {
-    await sendLicenseEmail({ apiKey: env.RESEND_API_KEY, to: email, licenseKey: token, fetchImpl });
-  } catch (err) {
-    // markEventProcessed already fired above, so Paddle's retry hits the
-    // duplicate guard and short-circuits — the email is NOT re-sent automatically.
-    // The license IS persisted in KV; only delivery failed. Recovery requires
-    // a manual re-send from the support@ inbox using the logged license uuid.
-    console.error(`[webhook] email delivery failed license=${licenseUuid} txn=${transactionId} email=${email}`, err);
-    throw err;
+  if (!isE2E && !alreadyRefunded) {
+    try {
+      await sendLicenseEmail({ apiKey: env.RESEND_API_KEY, to: email, licenseKey: token, fetchImpl });
+    } catch (err) {
+      console.error(`[webhook] email delivery failed license=${licenseUuid} txn=${transactionId} email=${email}`, err);
+      throw err;
+    }
   }
 
-  console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} customer=${customerId}`);
+  if (alreadyRefunded) {
+    console.warn(`[webhook] mint blocked — txn already has approved refund/chargeback adjustment license=${licenseUuid} txn=${transactionId}`);
+  }
+
+  console.log(`[webhook] minted license=${licenseUuid} txn=${transactionId} customer=${customerId}${alreadyRefunded ? " (born revoked)" : ""}${isE2E ? " (e2e)" : ""}`);
   return new Response("ok", { status: 200 });
 }
 
