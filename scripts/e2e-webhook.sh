@@ -177,13 +177,27 @@ echo "[e2e] posting refund…"
 refund_resp="$(sign_and_post "$(refund_payload)")"
 echo "[e2e] refund response: $refund_resp"
 
-cd backend/license
-refunded_record="$(npx wrangler kv key get "$MINTED_UUID" --binding LICENSES_TEST 2>/dev/null)"
-cd - >/dev/null
+# Cloudflare KV is eventually consistent: a successful put may not be visible
+# to subsequent reads at edge nodes for up to ~60 seconds. The mint assertion
+# is fine because the key didn't exist before (no cached value), but the
+# revoke check reads an updated key, which can hit a cached "revoked=false".
+# Poll with backoff up to a generous ceiling instead of asserting once.
+echo "[e2e] polling for revoked=true (eventual consistency window)…"
+revoked_after_refund=""
+for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+  cd backend/license
+  refunded_record="$(npx wrangler kv key get "$MINTED_UUID" --binding LICENSES_TEST 2>/dev/null)"
+  cd - >/dev/null
+  revoked_after_refund="$(echo "$refunded_record" | jq -r '.revoked' 2>/dev/null)"
+  if [[ "$revoked_after_refund" == "true" ]]; then
+    echo "[e2e] revoked=true observed on attempt $attempt"
+    break
+  fi
+  sleep 5
+done
 
-revoked_after_refund="$(echo "$refunded_record" | jq -r '.revoked')"
 if [[ "$revoked_after_refund" != "true" ]]; then
-  echo "[e2e] FAIL: expected revoked=true after refund, got $revoked_after_refund" >&2
+  echo "[e2e] FAIL: expected revoked=true after refund (waited 75s), got $revoked_after_refund" >&2
   exit 1
 fi
 echo "[e2e] refund assertions passed"
