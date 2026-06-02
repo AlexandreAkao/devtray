@@ -7,17 +7,24 @@ compatibility_flags = ["nodejs_compat"]
 routes = [{ pattern = "api.devtray.app", custom_domain = true }]
 
 # KV namespaces — IDs filled in by author after `wrangler kv:namespace create` (see T35).
+# preview_id is used when running `wrangler dev` (local or --remote). For safety
+# we route LICENSES preview to the LICENSES_TEST namespace, so any accidental
+# write during dev cannot pollute the production licenses store. LICENSES_TEST
+# and EVENTS use their own ids — events expire via TTL and test is already test.
 [[kv_namespaces]]
 binding = "LICENSES"
 id = "e42615c3ad954b15a224107f8c59b3f9"
+preview_id = "86bfdc8c67654c1fb446ea5ee7ef5f9a"
 
 [[kv_namespaces]]
 binding = "LICENSES_TEST"
 id = "86bfdc8c67654c1fb446ea5ee7ef5f9a"
+preview_id = "86bfdc8c67654c1fb446ea5ee7ef5f9a"
 
 [[kv_namespaces]]
 binding = "EVENTS"
 id = "c090c44d8d2449bfb07f1027a692e21c"
+preview_id = "c090c44d8d2449bfb07f1027a692e21c"
 
 # Secrets set via `wrangler secret put <NAME>` (NOT committed):
 #   LICENSE_PRIVATE_KEY          base64 of raw 32-byte Ed25519 private key
