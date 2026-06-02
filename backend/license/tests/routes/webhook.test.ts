@@ -624,6 +624,82 @@ describe("routes/webhook (Paddle)", () => {
     expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
   });
 
+  it("e2e routing: txn_e2e_* prefix lands the record in LICENSES_TEST + skips Paddle/email", async () => {
+    const txnId = "txn_e2e_aaaaaaaaaaaaaaaa";
+    const body = transactionCompletedPayload({
+      event_id: "evt_e2e_mint",
+      customer_id: "ctm_doesnt_matter",
+      transaction_id: txnId,
+    });
+    const stub = makeStubFetch({});
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body,
+        headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+    // No Paddle API calls, no Resend call: stub.calls is empty.
+    expect(stub.calls.length).toBe(0);
+
+    // Record landed in LICENSES_TEST, NOT LICENSES.
+    const testKeys = await env.LICENSES_TEST.list();
+    const liveKeys = await env.LICENSES.list();
+    const testRecs = await Promise.all(
+      testKeys.keys.map(
+        (k) => env.LICENSES_TEST.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; test_mode: boolean; user_email: string }>,
+      ),
+    );
+    const matchTest = testRecs.find((r) => r?.paddle_transaction_id === txnId);
+    expect(matchTest).toBeDefined();
+    expect(matchTest?.test_mode).toBe(true);
+    expect(matchTest?.user_email).toBe("e2e@devtray.app");
+    const liveRecs = await Promise.all(
+      liveKeys.keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string }>,
+      ),
+    );
+    expect(liveRecs.find((r) => r?.paddle_transaction_id === txnId)).toBeUndefined();
+  });
+
+  it("e2e routing: adjustment.updated approved for txn_e2e_* revokes in LICENSES_TEST", async () => {
+    const txnId = "txn_e2e_bbbbbbbbbbbbbbbb";
+    const mintBody = transactionCompletedPayload({
+      event_id: "evt_e2e_mint2",
+      customer_id: "ctm_e2e_2",
+      transaction_id: txnId,
+    });
+    const stub = makeStubFetch({});
+    await handleWebhook(
+      new Request("http://w/webhook", { method: "POST", body: mintBody, headers: { "Paddle-Signature": paddleHeader(mintBody, SECRET) } }),
+      env as any,
+      stub.impl,
+    );
+
+    const refundBody = adjustmentPayload({
+      event_id: "evt_e2e_refund",
+      event_type: "adjustment.updated",
+      transaction_id: txnId,
+      action: "refund",
+      status: "approved",
+    });
+    await handleWebhook(
+      new Request("http://w/webhook", { method: "POST", body: refundBody, headers: { "Paddle-Signature": paddleHeader(refundBody, SECRET) } }),
+      env as any,
+      stub.impl,
+    );
+
+    const testRecs = await Promise.all(
+      (await env.LICENSES_TEST.list()).keys.map(
+        (k) => env.LICENSES_TEST.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(testRecs.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(true);
+  });
+
   it("unknown event_type returns 200 (ignored) and marks event processed", async () => {
     const body = JSON.stringify({
       event_id: "evt_unknown",
