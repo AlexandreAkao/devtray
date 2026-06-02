@@ -122,9 +122,19 @@ refund_payload() {
     }'
 }
 
-# Stubs — implemented in Task 11.
-delete_license() { echo "TODO"; }
-delete_event() { echo "TODO"; }
+delete_license() {
+  local key="$1"
+  cd backend/license
+  npx wrangler kv key delete "$key" --binding LICENSES_TEST 2>/dev/null || true
+  cd - >/dev/null
+}
+
+delete_event() {
+  local key="$1"
+  cd backend/license
+  npx wrangler kv key delete "$key" --binding EVENTS 2>/dev/null || true
+  cd - >/dev/null
+}
 
 # --- mint ---
 
@@ -177,3 +187,13 @@ if [[ "$revoked_after_refund" != "true" ]]; then
   exit 1
 fi
 echo "[e2e] refund assertions passed"
+
+# --- cleanup ---
+
+echo "[e2e] cleaning up…"
+delete_license "$MINTED_UUID"
+delete_event "$EVENT_MINT"
+delete_event "$EVENT_REFUND"
+
+echo "[e2e] pass — txn=$TXN_ID license=$MINTED_UUID"
+exit 0
