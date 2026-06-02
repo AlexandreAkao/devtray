@@ -58,6 +58,38 @@ async function fetchCustomerEmail(
   }
 }
 
+// Returns true if the transaction has at least one approved refund or
+// chargeback adjustment, false if zero, null on Paddle API error / network
+// failure (fail-open at the caller). Paddle Billing v1 models refunds as
+// Adjustments — the transaction's own status field never transitions to
+// "refunded", so checking adjustments is the only correct way to detect a
+// refund from the API.
+async function fetchTransactionRefunds(
+  transactionId: string,
+  env: Env,
+  fetchImpl: FetchImpl,
+): Promise<boolean | null> {
+  const apiBase = env.PADDLE_API_BASE_URL || DEFAULT_API_BASE;
+  const url = `${apiBase}/adjustments?transaction_id=${encodeURIComponent(transactionId)}&status=approved&per_page=50`;
+  try {
+    const res = await fetchImpl(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.PADDLE_API_KEY}` },
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "<no body>");
+      console.error(`[webhook] adjustments fetch failed status=${res.status} txn=${transactionId} body=${body}`);
+      return null;
+    }
+    const payload = (await res.json()) as { data?: Array<{ action?: string }> };
+    const items = payload?.data ?? [];
+    return items.some((adj) => adj.action === "refund" || adj.action === "chargeback");
+  } catch (err) {
+    console.error(`[webhook] adjustments fetch error txn=${transactionId}`, err);
+    return null;
+  }
+}
+
 export async function handleWebhook(req: Request, env: Env, fetchImpl: FetchImpl = fetch): Promise<Response> {
   const rawBody = await req.text();
   const sig = req.headers.get("Paddle-Signature") ?? "";

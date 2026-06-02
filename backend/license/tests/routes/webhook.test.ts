@@ -70,17 +70,43 @@ function adjustmentPayload(opts: {
 
 type RecordedCall = { url: string; init?: RequestInit };
 
+type AdjStub = { id?: string; action: "refund" | "chargeback" | "credit" | string; status?: string };
+
 /**
  * Stub fetch that:
+ *  - returns the configured adjustments for GET /adjustments?transaction_id=… (per txn_id → adjustment array map)
  *  - returns the configured email for GET /customers/{id} (per customer_id → email map)
  *  - returns a 200 OK for any other URL (Resend, etc.)
  */
-function makeStubFetch(opts: { customerEmails?: Record<string, string>; customerStatus?: number } = {}) {
+function makeStubFetch(opts: {
+  customerEmails?: Record<string, string>;
+  customerStatus?: number;
+  adjustmentsByTxn?: Record<string, AdjStub[]>;  // NEW: txn_id → adjustments array (only approved ones, since we filter status=approved upstream)
+  adjFailOn?: Set<string>;                        // NEW: txn_ids whose /adjustments query returns 500
+  adjNetworkFail?: boolean;                       // NEW: throw on any /adjustments query
+} = {}) {
   const calls: RecordedCall[] = [];
   const emails = opts.customerEmails ?? { ctm_default: "buyer@example.com" };
+  const adjustmentsByTxn = opts.adjustmentsByTxn ?? {};
+  const adjFailOn = opts.adjFailOn ?? new Set<string>();
   const impl = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const urlStr = String(url);
     calls.push({ url: urlStr, init });
+
+    // NEW: GET /adjustments?transaction_id=X&status=approved → { data: [...] } or 500 or throw
+    if (urlStr.includes("/adjustments")) {
+      if (opts.adjNetworkFail) throw new Error("network down");
+      const u = new URL(urlStr);
+      const txnId = u.searchParams.get("transaction_id") ?? "";
+      if (adjFailOn.has(txnId)) {
+        return new Response(JSON.stringify({ error: { code: "boom" } }), { status: 500 });
+      }
+      const items = adjustmentsByTxn[txnId] ?? [];
+      return new Response(JSON.stringify({ data: items, meta: { pagination: { has_more: false } } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
 
     // GET /customers/{customer_id} → return { data: { email } }
     const m = urlStr.match(/\/customers\/([^/?]+)/);
@@ -491,6 +517,110 @@ describe("routes/webhook (Paddle)", () => {
 
     const got = (await env.LICENSES.get(legacyUuid, "json")) as { revoked: boolean } | null;
     expect(got?.revoked).toBe(true);
+  });
+
+  it("pre-mint guard: persists record as revoked=true when an approved refund adjustment exists, skips email", async () => {
+    const txnId = "txn_prerefund_1";
+    const body = transactionCompletedPayload({
+      event_id: "evt_prerefund",
+      customer_id: "ctm_prerefund",
+      transaction_id: txnId,
+    });
+    const stub = makeStubFetch({
+      customerEmails: { ctm_prerefund: "pre@x.com" },
+      adjustmentsByTxn: { [txnId]: [{ id: "adj_pre_1", action: "refund", status: "approved" }] },
+    });
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body,
+        headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+
+    // NO Resend call: refund was detected so email was suppressed.
+    const resendCalls = stub.calls.filter((c) => c.url.includes("resend.com"));
+    expect(resendCalls.length).toBe(0);
+
+    // Adjustments query DID happen — confirm we hit the right URL with the right filters.
+    const adjCalls = stub.calls.filter((c) => c.url.includes("/adjustments"));
+    expect(adjCalls.length).toBe(1);
+    expect(adjCalls[0]!.url).toContain(`transaction_id=${encodeURIComponent(txnId)}`);
+    expect(adjCalls[0]!.url).toContain("status=approved");
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    const minted = records.find((r) => r?.paddle_transaction_id === txnId);
+    expect(minted).toBeDefined();
+    expect(minted?.revoked).toBe(true);
+  });
+
+  it("pre-mint guard: persists record as revoked=true when an approved chargeback adjustment exists", async () => {
+    const txnId = "txn_precb_1";
+    const body = transactionCompletedPayload({
+      event_id: "evt_precb",
+      customer_id: "ctm_precb",
+      transaction_id: txnId,
+    });
+    const stub = makeStubFetch({
+      customerEmails: { ctm_precb: "cb@x.com" },
+      adjustmentsByTxn: { [txnId]: [{ id: "adj_cb_1", action: "chargeback", status: "approved" }] },
+    });
+    await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body,
+        headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(true);
+  });
+
+  it("pre-mint guard: fails OPEN when adjustments fetch errors (mint proceeds normally)", async () => {
+    const txnId = "txn_fopen_1";
+    const body = transactionCompletedPayload({
+      event_id: "evt_fopen",
+      customer_id: "ctm_fopen",
+      transaction_id: txnId,
+    });
+    const stub = makeStubFetch({
+      customerEmails: { ctm_fopen: "fo@x.com" },
+      adjFailOn: new Set([txnId]),
+    });
+    const res = await handleWebhook(
+      new Request("http://w/webhook", {
+        method: "POST",
+        body,
+        headers: { "Paddle-Signature": paddleHeader(body, SECRET) },
+      }),
+      env as any,
+      stub.impl,
+    );
+    expect(res.status).toBe(200);
+
+    // Resend was called — mint proceeded normally because we treat null as "unknown, fail open"
+    const resendCalls = stub.calls.filter((c) => c.url.includes("resend.com"));
+    expect(resendCalls.length).toBe(1);
+
+    const records = await Promise.all(
+      (await env.LICENSES.list()).keys.map(
+        (k) => env.LICENSES.get(k.name, "json") as Promise<{ paddle_transaction_id?: string; revoked: boolean }>,
+      ),
+    );
+    expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
   });
 
   it("unknown event_type returns 200 (ignored) and marks event processed", async () => {
