@@ -212,8 +212,8 @@ async function revokeByAdjustment(event: PaddleEvent, env: Env, eventId: string)
     return new Response("ok (missing transaction_id)", { status: 200 });
   }
 
-  // v1.0: prod-only routing (see mintLicense note above).
-  const ns = licenseNamespace(env, false);
+  const isE2E = transactionId.startsWith("txn_e2e_");
+  const ns = licenseNamespace(env, isE2E);
 
   const list = await ns.list();
   // CF KV list() returns ≤1000 keys per call. At v1.0-era scale (hundreds of
@@ -227,7 +227,7 @@ async function revokeByAdjustment(event: PaddleEvent, env: Env, eventId: string)
     if (rec && (rec.paddle_transaction_id === transactionId || rec.ls_order_id === transactionId)) {
       rec.revoked = true;
       await ns.put(key.name, JSON.stringify(rec));
-      console.log(`[webhook] revoked license=${key.name} txn=${transactionId} adjustment=${event.data.id} action=${event.data.action}`);
+      console.log(`[webhook] revoked license=${key.name} txn=${transactionId} adjustment=${event.data.id} action=${event.data.action}${isE2E ? " (e2e)" : ""}`);
     }
   }
   await markEventProcessed(env, eventId, "revoked");
