@@ -117,9 +117,12 @@ describe("lib/reconcile", () => {
     expect(rec.revoked).toBe(true);
   });
 
-  it("revokes when there is a partial refund adjustment", async () => {
+  // Paddle Adjustments do not have a separate "partial_refund" action — both partial
+  // and full refunds carry action="refund"; the distinction lives in Adjustment totals,
+  // not the action field. The test above covers that path; this test covers chargeback.
+  it("revokes when there is a chargeback adjustment", async () => {
     await seedLicense("u6", {});
-    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u6: [{ id: "adj_u6", action: "refund" }] } });
+    const stub = makePaddleStub({ adjustmentsByTxn: { txn_u6: [{ id: "adj_u6", action: "chargeback" }] } });
     const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
     expect(result.revoked).toBe(1);
     const rec = (await env.LICENSES.get("u6", "json")) as LicenseRecord;
