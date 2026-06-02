@@ -92,21 +92,6 @@ describe("lib/reconcile", () => {
     expect(result.revoked).toBe(0);
   });
 
-  it("skips records without paddle_transaction_id (legacy ls_order_id only)", async () => {
-    await env.LICENSES.put("u4", JSON.stringify({
-      user_email: "legacy@x.com",
-      created_at: Math.floor(NOW_MS / 1000) - 3600,
-      activations: [],
-      revoked: false,
-      test_mode: false,
-      ls_order_id: "order_old",
-    }));
-    const stub = makePaddleStub();
-    const result = await reconcileRefunds(env as any, stub.impl as any, NOW_MS);
-    expect(result.fetched).toBe(0);
-    expect(stub.calls.length).toBe(0);
-  });
-
   it("revokes when there is a refund adjustment", async () => {
     await seedLicense("u5", {});
     const stub = makePaddleStub({ adjustmentsByTxn: { txn_u5: [{ id: "adj_u5", action: "refund" }] } });

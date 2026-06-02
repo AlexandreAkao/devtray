@@ -316,7 +316,6 @@ describe("routes/webhook (Paddle)", () => {
         (k) =>
           env.LICENSES.get(k.name, "json") as Promise<{
             paddle_transaction_id?: string;
-            ls_order_id?: string;
             revoked: boolean;
           }>,
       ),
@@ -487,37 +486,6 @@ describe("routes/webhook (Paddle)", () => {
       ),
     );
     expect(records.find((r) => r?.paddle_transaction_id === txnId)?.revoked).toBe(false);
-  });
-
-  it("refund matches legacy ls_order_id records (one-cycle transition fallback)", async () => {
-    const orderId = "ord_legacy_1";
-    const legacyUuid = "uuid-legacy-1";
-    await env.LICENSES.put(
-      legacyUuid,
-      JSON.stringify({
-        user_email: "legacy@x.com",
-        created_at: 1_748_500_000,
-        activations: [],
-        revoked: false,
-        test_mode: false,
-        ls_order_id: orderId,
-      }),
-    );
-
-    const refundBody = adjustmentPayload({ event_id: "evt_refund_legacy", transaction_id: orderId, action: "refund" });
-    const stub = makeStubFetch();
-    await handleWebhook(
-      new Request("http://w/webhook", {
-        method: "POST",
-        body: refundBody,
-        headers: { "Paddle-Signature": paddleHeader(refundBody, SECRET) },
-      }),
-      env as any,
-      stub.impl,
-    );
-
-    const got = (await env.LICENSES.get(legacyUuid, "json")) as { revoked: boolean } | null;
-    expect(got?.revoked).toBe(true);
   });
 
   it("pre-mint guard: persists record as revoked=true when an approved refund adjustment exists, skips email", async () => {
