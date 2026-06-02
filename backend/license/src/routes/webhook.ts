@@ -224,7 +224,7 @@ async function revokeByAdjustment(event: PaddleEvent, env: Env, eventId: string)
   }
   for (const key of list.keys) {
     const rec = (await ns.get(key.name, "json")) as LicenseRecord | null;
-    if (rec && (rec.paddle_transaction_id === transactionId || rec.ls_order_id === transactionId)) {
+    if (rec && rec.paddle_transaction_id === transactionId) {
       rec.revoked = true;
       await ns.put(key.name, JSON.stringify(rec));
       console.log(`[webhook] revoked license=${key.name} txn=${transactionId} adjustment=${event.data.id} action=${event.data.action}${isE2E ? " (e2e)" : ""}`);
